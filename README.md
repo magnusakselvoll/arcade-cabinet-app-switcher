@@ -2,7 +2,7 @@
 
 A Windows Service that acts as an application launcher and switcher for a Windows-based arcade cabinet. It starts automatically on boot, launches a default profile, and lets users switch between profiles using joystick button combinations — no keyboard or mouse required.
 
-> **Status:** This project is currently in the specification phase. No implementation has begun yet. See [SPEC.md](SPEC.md) for the full functional specification.
+> **Status:** Early development. The core project scaffold is in place; full functionality is under active development. See [SPEC.md](SPEC.md) for the full functional specification.
 
 ## Features
 
@@ -18,11 +18,24 @@ A Windows Service that acts as an application launcher and switcher for a Window
 
 ## Prerequisites
 
-<!-- TODO: Document prerequisites once the tech stack is implemented -->
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 
 ## Quick Start
 
-<!-- TODO: Add setup and run instructions once the project is set up -->
+```bash
+# Clone the repo
+git clone https://github.com/magnusakselvoll/arcade-cabinet-app-switcher.git
+cd arcade-cabinet-app-switcher
+
+# Build
+dotnet build
+
+# Run tests
+dotnet test
+
+# Run locally (console mode — UseWindowsService() degrades gracefully on non-Windows)
+dotnet run --project src/ArcadeCabinetSwitcher
+```
 
 ## Configuration
 
