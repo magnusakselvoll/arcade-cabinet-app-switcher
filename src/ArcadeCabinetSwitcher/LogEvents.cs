@@ -39,6 +39,13 @@ public static class LogEvents
     // Input detection
     public static readonly EventId InputComboDetected = new(5000, nameof(InputComboDetected));
     public static readonly EventId InputError = new(5001, nameof(InputError));
+    public static readonly EventId InputMonitoringStarted = new(5002, nameof(InputMonitoringStarted));
+    public static readonly EventId InputMonitoringStopped = new(5003, nameof(InputMonitoringStopped));
+    public static readonly EventId InputComboHoldStarted = new(5004, nameof(InputComboHoldStarted));
+    public static readonly EventId InputComboHoldReleased = new(5005, nameof(InputComboHoldReleased));
+    public static readonly EventId InputDebugButtonsPressed = new(5006, nameof(InputDebugButtonsPressed));
+    public static readonly EventId JoystickAcquired = new(5007, nameof(JoystickAcquired));
+    public static readonly EventId JoystickNotFound = new(5008, nameof(JoystickNotFound));
 
     // Errors
     public static readonly EventId UnexpectedException = new(9000, nameof(UnexpectedException));

@@ -1,4 +1,5 @@
 using ArcadeCabinetSwitcher.Configuration;
+using ArcadeCabinetSwitcher.Input;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -10,7 +11,10 @@ public class WorkerTests
     [TestMethod]
     public async Task Worker_StartsAndStops_WithoutError()
     {
-        var worker = new Worker(NullLogger<Worker>.Instance, new StubConfigurationLoader());
+        var worker = new Worker(
+            NullLogger<Worker>.Instance,
+            new StubConfigurationLoader(),
+            new StubInputHandler());
         using var cts = new CancellationTokenSource();
 
         var executeTask = worker.StartAsync(cts.Token);
@@ -40,5 +44,16 @@ public class WorkerTests
                 }
             ]
         };
+    }
+
+    private sealed class StubInputHandler : IInputHandler
+    {
+        public event EventHandler<string>? ProfileSwitchRequested { add { } remove { } }
+
+        public Task StartAsync(AppSwitcherConfig config, CancellationToken cancellationToken)
+            => Task.CompletedTask;
+
+        public Task StopAsync(CancellationToken cancellationToken)
+            => Task.CompletedTask;
     }
 }

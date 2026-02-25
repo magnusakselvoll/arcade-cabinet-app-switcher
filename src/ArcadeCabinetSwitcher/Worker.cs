@@ -1,8 +1,12 @@
 using ArcadeCabinetSwitcher.Configuration;
+using ArcadeCabinetSwitcher.Input;
 
 namespace ArcadeCabinetSwitcher;
 
-public class Worker(ILogger<Worker> logger, IConfigurationLoader configurationLoader) : BackgroundService
+public class Worker(
+    ILogger<Worker> logger,
+    IConfigurationLoader configurationLoader,
+    IInputHandler inputHandler) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -10,8 +14,13 @@ public class Worker(ILogger<Worker> logger, IConfigurationLoader configurationLo
 
         var config = configurationLoader.Load();
 
-        // TODO (#6): Start input handler via IInputHandler.StartAsync
-        // TODO (#7): Wire up profile switch requests to IProcessManager (using config)
+        inputHandler.ProfileSwitchRequested += (_, profileName) =>
+            logger.LogInformation(LogEvents.ProfileSwitchStarted,
+                "Profile switch requested: {ProfileName}", profileName);
+
+        await inputHandler.StartAsync(config, stoppingToken);
+
+        // TODO (#8): Wire up profile switch requests to IProcessManager (using config)
 
         await Task.Delay(Timeout.Infinite, stoppingToken);
 
