@@ -39,7 +39,29 @@ dotnet run --project src/ArcadeCabinetSwitcher
 
 ## Configuration
 
-Configuration is stored in a JSON file. Each profile specifies the commands to run and the joystick combo used to switch to it. See [SPEC.md](SPEC.md) for the full configuration format and examples.
+Profile configuration is stored in `profiles.json`, located in the same directory as the service executable. On first install the file is pre-populated with an example configuration that you can edit.
+
+Each profile specifies either the commands to run or a special action (`reboot`/`shutdown`), along with the joystick combo used to switch to it:
+
+```json
+{
+  "defaultProfile": "mame",
+  "profiles": [
+    {
+      "name": "mame",
+      "commands": ["C:\\Games\\MAME\\mame64.exe"],
+      "switchCombo": { "buttons": ["Button1", "Button2"], "holdDurationSeconds": 10 }
+    },
+    {
+      "name": "reboot",
+      "action": "reboot",
+      "switchCombo": { "buttons": ["Button1", "Button2", "Button3"], "holdDurationSeconds": 10 }
+    }
+  ]
+}
+```
+
+See [SPEC.md](SPEC.md) for the full configuration format and validation rules.
 
 ## Logging
 
