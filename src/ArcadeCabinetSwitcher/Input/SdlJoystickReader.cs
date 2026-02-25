@@ -22,12 +22,12 @@ internal sealed class SdlJoystickReader : IJoystickReader
         _sdl.SetHint(Sdl.HintJoystickThread, "1");
         // Allow joystick events when the process has no foreground window.
         _sdl.SetHint(Sdl.HintJoystickAllowBackgroundEvents, "1");
-        // macOS: use an offscreen (dummy) video driver so SDL_INIT_VIDEO succeeds headlessly.
-        // The VIDEO subsystem must be initialised to pump the CoreFoundation run loop that
-        // the GameController framework relies on for initial joystick enumeration.
-        Environment.SetEnvironmentVariable("SDL_VIDEODRIVER", "offscreen");
+        // macOS: disable the GameController (MFi) driver, which requires AppKit setup on the
+        // main thread. Arcade cabinet USB encoder boards are plain HID devices handled by
+        // SDL2's HIDAPI backend, which works headlessly on all platforms without SDL_INIT_VIDEO.
+        _sdl.SetHint("SDL_JOYSTICK_MFI", "0");
 
-        if (_sdl.Init(Sdl.InitJoystick | Sdl.InitVideo) < 0)
+        if (_sdl.Init(Sdl.InitJoystick) < 0)
         {
             _logger.LogWarning(LogEvents.JoystickNotFound,
                 "SDL init failed: {Error}", _sdl.GetErrorS());
