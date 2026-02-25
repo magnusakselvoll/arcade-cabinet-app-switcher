@@ -1,4 +1,5 @@
 using ArcadeCabinetSwitcher;
+using ArcadeCabinetSwitcher.Configuration;
 using Serilog;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -6,6 +7,7 @@ builder.Services.AddWindowsService(options =>
 {
     options.ServiceName = "ArcadeCabinetSwitcher";
 });
+builder.Services.AddSingleton<IConfigurationLoader, ConfigurationLoader>();
 builder.Services.AddHostedService<Worker>();
 
 builder.Services.AddSerilog((_, lc) =>

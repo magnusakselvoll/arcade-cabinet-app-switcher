@@ -57,13 +57,14 @@ arcade-cabinet-app-switcher/
 ├── Directory.Packages.props            # Central Package Management — all NuGet versions here
 ├── src/
 │   └── ArcadeCabinetSwitcher/
-│       ├── Program.cs                  # Host builder — AddWindowsService(), registers Worker
-│       ├── Worker.cs                   # BackgroundService entry point
-│       ├── Configuration/              # Config POCOs (AppSwitcherConfig) and IConfigurationLoader
+│       ├── Program.cs                  # Host builder — AddWindowsService(), registers Worker and ConfigurationLoader
+│       ├── Worker.cs                   # BackgroundService entry point — loads config on startup
+│       ├── profiles.json               # Default/example profile configuration (copied to output dir)
+│       ├── Configuration/              # Config POCOs, IConfigurationLoader, ConfigurationLoader, ConfigurationValidator
 │       ├── Input/                      # IInputHandler — joystick monitoring
 │       └── ProcessManagement/          # IProcessManager — process lifecycle
 └── tests/
-    └── ArcadeCabinetSwitcher.Tests/    # xUnit test project
+    └── ArcadeCabinetSwitcher.Tests/    # MSTest test project
 ```
 
 Key decisions:
@@ -71,6 +72,8 @@ Key decisions:
 - **Central Package Management**: all NuGet package versions are pinned in `Directory.Packages.props`
 - **Shared MSBuild settings**: `Directory.Build.props` sets nullable, implicit usings, and warnings-as-errors for all projects
 - **Logging**: Serilog is used as the logging backend (infrastructure only — wired in `Program.cs` via `UseSerilog()`). All application code uses `Microsoft.Extensions.Logging.ILogger<T>`. Structured event IDs are defined in `src/ArcadeCabinetSwitcher/LogEvents.cs`. Sinks (Console, File, Windows Event Log) are configured in `appsettings.json` under the `Serilog` key.
+- **Configuration loading**: Profile configuration is loaded from `profiles.json` (separate from `appsettings.json`) using `System.Text.Json`. `ConfigurationLoader` takes an optional `configFilePath` constructor parameter (defaults to `AppContext.BaseDirectory/profiles.json`) to enable testing without mocking. `ConfigurationValidator` is an `internal` static class with `InternalsVisibleTo` for the test project.
+- **MSTest assertions**: MSTest 4.x removed `Assert.ThrowsException<T>` and `[ExpectedException]`; use `Assert.ThrowsExactly<T>` instead.
 
 ## Tech Stack
 

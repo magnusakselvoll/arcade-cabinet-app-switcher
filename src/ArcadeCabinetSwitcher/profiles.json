@@ -1,0 +1,41 @@
+{
+  "defaultProfile": "mame",
+  "profiles": [
+    {
+      "name": "mame",
+      "commands": [
+        "C:\\Games\\MAME\\mame64.exe"
+      ],
+      "switchCombo": {
+        "buttons": ["Button1", "Button2"],
+        "holdDurationSeconds": 10
+      }
+    },
+    {
+      "name": "steam",
+      "commands": [
+        "C:\\Program Files (x86)\\Steam\\steam.exe -bigpicture"
+      ],
+      "switchCombo": {
+        "buttons": ["Button3", "Button4"],
+        "holdDurationSeconds": 10
+      }
+    },
+    {
+      "name": "reboot",
+      "action": "reboot",
+      "switchCombo": {
+        "buttons": ["Button1", "Button2", "Button3"],
+        "holdDurationSeconds": 10
+      }
+    },
+    {
+      "name": "shutdown",
+      "action": "shutdown",
+      "switchCombo": {
+        "buttons": ["Button1", "Button2", "Button3", "Button4"],
+        "holdDurationSeconds": 10
+      }
+    }
+  ]
+}
