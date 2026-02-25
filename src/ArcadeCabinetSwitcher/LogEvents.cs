@@ -31,6 +31,10 @@ public static class LogEvents
     public static readonly EventId ProcessLaunched = new(4000, nameof(ProcessLaunched));
     public static readonly EventId ProcessTerminated = new(4001, nameof(ProcessTerminated));
     public static readonly EventId ProcessTerminationFailed = new(4002, nameof(ProcessTerminationFailed));
+    public static readonly EventId ProcessLaunchFailed = new(4003, nameof(ProcessLaunchFailed));
+    public static readonly EventId ProfileLaunched = new(4004, nameof(ProfileLaunched));
+    public static readonly EventId ProfileTerminationStarted = new(4005, nameof(ProfileTerminationStarted));
+    public static readonly EventId ProfileTerminationCompleted = new(4006, nameof(ProfileTerminationCompleted));
 
     // Input detection
     public static readonly EventId InputComboDetected = new(5000, nameof(InputComboDetected));
