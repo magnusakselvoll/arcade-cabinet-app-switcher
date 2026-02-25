@@ -70,6 +70,7 @@ Key decisions:
 - **TFM**: `net10.0` (not `net10.0-windows`) — buildable on macOS; switch to `-windows` when Windows APIs are needed
 - **Central Package Management**: all NuGet package versions are pinned in `Directory.Packages.props`
 - **Shared MSBuild settings**: `Directory.Build.props` sets nullable, implicit usings, and warnings-as-errors for all projects
+- **Logging**: Serilog is used as the logging backend (infrastructure only — wired in `Program.cs` via `UseSerilog()`). All application code uses `Microsoft.Extensions.Logging.ILogger<T>`. Structured event IDs are defined in `src/ArcadeCabinetSwitcher/LogEvents.cs`. Sinks (Console, File, Windows Event Log) are configured in `appsettings.json` under the `Serilog` key.
 
 ## Tech Stack
 

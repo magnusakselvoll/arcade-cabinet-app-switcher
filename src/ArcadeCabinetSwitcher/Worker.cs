@@ -4,7 +4,7 @@ public class Worker(ILogger<Worker> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        logger.LogInformation("Arcade Cabinet App Switcher starting");
+        logger.LogInformation(LogEvents.ServiceStarting, "Arcade Cabinet App Switcher starting");
 
         // TODO (#5): Load configuration via IConfigurationLoader
         // TODO (#6): Start input handler via IInputHandler.StartAsync
@@ -12,6 +12,6 @@ public class Worker(ILogger<Worker> logger) : BackgroundService
 
         await Task.Delay(Timeout.Infinite, stoppingToken);
 
-        logger.LogInformation("Arcade Cabinet App Switcher stopping");
+        logger.LogInformation(LogEvents.ServiceStopping, "Arcade Cabinet App Switcher stopping");
     }
 }
