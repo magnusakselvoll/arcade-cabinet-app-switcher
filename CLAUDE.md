@@ -34,17 +34,48 @@ When closing issues via PR, consider updating:
 
 ## Build Commands
 
-<!-- TODO: Add build commands once the tech stack is decided -->
+```bash
+# Restore dependencies
+dotnet restore
+
+# Build solution
+dotnet build
+
+# Run tests
+dotnet test
+
+# Run the service locally (gracefully degrades on non-Windows)
+dotnet run --project src/ArcadeCabinetSwitcher
+```
 
 ## Architecture
 
-<!-- TODO: Document architecture once the project structure is established -->
+```
+arcade-cabinet-app-switcher/
+├── ArcadeCabinetSwitcher.slnx          # Solution file (.slnx format)
+├── Directory.Build.props               # Shared: nullable, implicit usings, warnings-as-errors
+├── Directory.Packages.props            # Central Package Management — all NuGet versions here
+├── src/
+│   └── ArcadeCabinetSwitcher/
+│       ├── Program.cs                  # Host builder — AddWindowsService(), registers Worker
+│       ├── Worker.cs                   # BackgroundService entry point
+│       ├── Configuration/              # Config POCOs (AppSwitcherConfig) and IConfigurationLoader
+│       ├── Input/                      # IInputHandler — joystick monitoring
+│       └── ProcessManagement/          # IProcessManager — process lifecycle
+└── tests/
+    └── ArcadeCabinetSwitcher.Tests/    # xUnit test project
+```
+
+Key decisions:
+- **TFM**: `net10.0` (not `net10.0-windows`) — buildable on macOS; switch to `-windows` when Windows APIs are needed
+- **Central Package Management**: all NuGet package versions are pinned in `Directory.Packages.props`
+- **Shared MSBuild settings**: `Directory.Build.props` sets nullable, implicit usings, and warnings-as-errors for all projects
 
 ## Tech Stack
 
 - **Language**: C#
-- **Runtime**: .NET
-- **Application type**: Windows Service
+- **Runtime**: .NET 10
+- **Application type**: Windows Service (Generic Host with `UseWindowsService()`)
 
 ## Reference
 
