@@ -42,7 +42,9 @@ When closing issues via PR, consider updating:
 
 ## Tech Stack
 
-<!-- TODO: Document tech stack once decided -->
+- **Language**: C#
+- **Runtime**: .NET
+- **Application type**: Windows Service
 
 ## Reference
 
