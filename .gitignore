@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+
+# Environment variables
+.env
+
+# VS Code (keep settings but ignore everything else)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+.history/
