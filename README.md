@@ -41,6 +41,24 @@ dotnet run --project src/ArcadeCabinetSwitcher
 
 Configuration is stored in a JSON file. Each profile specifies the commands to run and the joystick combo used to switch to it. See [SPEC.md](SPEC.md) for the full configuration format and examples.
 
+## Logging
+
+Logging is configured in `appsettings.json` under the `Serilog` key. By default, events are written to the **console** and to a **rolling daily log file** under `logs/`.
+
+### Enable Windows Event Log
+
+To also write to the Windows Event Log, first create the event source once (run as Administrator):
+
+```powershell
+New-EventLog -LogName Application -Source "ArcadeCabinetSwitcher"
+```
+
+Then uncomment the `EventLog` sink block in `appsettings.json`.
+
+### Change the minimum log level
+
+Edit the `MinimumLevel.Default` value in `appsettings.json` (e.g., `"Debug"` for verbose output).
+
 ## License
 
 This project is licensed under the terms of the [LICENSE](LICENSE) file.
