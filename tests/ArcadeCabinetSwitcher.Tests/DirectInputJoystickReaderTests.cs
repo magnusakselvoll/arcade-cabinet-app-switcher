@@ -5,8 +5,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace ArcadeCabinetSwitcher.Tests;
 
 /// <summary>
-/// Integration tests for <see cref="DirectInputJoystickReader"/>.
-/// Requires a physical joystick/gamepad connected via DirectInput (Windows only).
+/// Integration tests for <see cref="SdlJoystickReader"/>.
+/// Requires a physical joystick/gamepad connected to the machine.
 /// Excluded from CI via <c>--filter "TestCategory!=Integration"</c>.
 /// </summary>
 [TestClass]
@@ -16,7 +16,7 @@ public class DirectInputJoystickReaderTests
     [TestMethod]
     public void Initialize_WithJoystickConnected_ReturnsTrue()
     {
-        using var reader = new DirectInputJoystickReader(NullLogger<DirectInputJoystickReader>.Instance);
+        using var reader = new SdlJoystickReader(NullLogger<SdlJoystickReader>.Instance);
 
         var result = reader.Initialize();
 
@@ -26,7 +26,7 @@ public class DirectInputJoystickReaderTests
     [TestMethod]
     public void GetPressedButtons_ReturnsSet_WithoutThrowing()
     {
-        using var reader = new DirectInputJoystickReader(NullLogger<DirectInputJoystickReader>.Instance);
+        using var reader = new SdlJoystickReader(NullLogger<SdlJoystickReader>.Instance);
         reader.Initialize();
 
         var pressed = reader.GetPressedButtons();
@@ -37,23 +37,20 @@ public class DirectInputJoystickReaderTests
     [TestMethod]
     public void Dispose_CanBeCalledMultipleTimes_WithoutThrowing()
     {
-        var reader = new DirectInputJoystickReader(NullLogger<DirectInputJoystickReader>.Instance);
+        var reader = new SdlJoystickReader(NullLogger<SdlJoystickReader>.Instance);
         reader.Initialize();
 
         reader.Dispose();
-        reader.Dispose(); // Second dispose should not throw
+        reader.Dispose();
     }
 
     [TestMethod]
-    public void Initialize_OnNonWindows_ReturnsFalse()
+    public void Initialize_WithNoJoysticksConnected_ReturnsFalse()
     {
-        if (OperatingSystem.IsWindows())
-            Assert.Inconclusive("This test only applies on non-Windows platforms.");
-
-        using var reader = new DirectInputJoystickReader(NullLogger<DirectInputJoystickReader>.Instance);
+        using var reader = new SdlJoystickReader(NullLogger<SdlJoystickReader>.Instance);
 
         var result = reader.Initialize();
 
-        Assert.IsFalse(result);
+        Assert.IsFalse(result, "Expected Initialize to return false when no joystick is connected.");
     }
 }
