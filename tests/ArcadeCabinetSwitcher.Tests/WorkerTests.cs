@@ -1,10 +1,12 @@
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ArcadeCabinetSwitcher.Tests;
 
+[TestClass]
 public class WorkerTests
 {
-    [Fact]
+    [TestMethod]
     public async Task Worker_StartsAndStops_WithoutError()
     {
         var worker = new Worker(NullLogger<Worker>.Instance);
@@ -15,6 +17,6 @@ public class WorkerTests
         await cts.CancelAsync();
         await worker.StopAsync(CancellationToken.None);
 
-        Assert.True(executeTask.IsCompleted);
+        Assert.IsTrue(executeTask.IsCompleted);
     }
 }
