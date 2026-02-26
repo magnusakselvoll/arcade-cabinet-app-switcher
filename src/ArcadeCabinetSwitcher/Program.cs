@@ -1,5 +1,6 @@
 using ArcadeCabinetSwitcher;
 using ArcadeCabinetSwitcher.Configuration;
+using ArcadeCabinetSwitcher.Input;
 using ArcadeCabinetSwitcher.ProcessManagement;
 using Serilog;
 
@@ -11,6 +12,8 @@ builder.Services.AddWindowsService(options =>
 builder.Services.AddSingleton<IConfigurationLoader, ConfigurationLoader>();
 builder.Services.AddSingleton<IProcessLauncher, SystemProcessLauncher>();
 builder.Services.AddSingleton<IProcessManager, ProcessManager>();
+builder.Services.AddSingleton<IJoystickReader, SdlJoystickReader>();
+builder.Services.AddSingleton<IInputHandler, InputHandler>();
 builder.Services.AddHostedService<Worker>();
 
 builder.Services.AddSerilog((_, lc) =>
