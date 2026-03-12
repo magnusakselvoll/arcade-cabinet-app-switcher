@@ -26,6 +26,10 @@ public static class LogEvents
     // Profile switching
     public static readonly EventId ProfileSwitchStarted = new(3000, nameof(ProfileSwitchStarted));
     public static readonly EventId ProfileSwitchCompleted = new(3001, nameof(ProfileSwitchCompleted));
+    public static readonly EventId ProfileSwitchIgnored = new(3002, nameof(ProfileSwitchIgnored));
+    public static readonly EventId ProfileSwitchFailed = new(3003, nameof(ProfileSwitchFailed));
+    public static readonly EventId DefaultProfileLaunched = new(3004, nameof(DefaultProfileLaunched));
+    public static readonly EventId SpecialActionExecuted = new(3005, nameof(SpecialActionExecuted));
 
     // Process management
     public static readonly EventId ProcessLaunched = new(4000, nameof(ProcessLaunched));
