@@ -1,0 +1,13 @@
+<Project Sdk="WixToolset.Sdk/5.0.2">
+
+  <PropertyGroup>
+    <InstallerVersion Condition="'$(InstallerVersion)' == ''">0.0.1</InstallerVersion>
+    <PublishDir Condition="'$(PublishDir)' == ''">..\..\publish\win-x64\</PublishDir>
+    <DefineConstants>InstallerVersion=$(InstallerVersion);PublishDir=$(PublishDir)</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WixToolset.Util.wixext" />
+  </ItemGroup>
+
+</Project>

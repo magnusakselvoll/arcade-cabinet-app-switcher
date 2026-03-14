@@ -17,6 +17,10 @@
     <PackageVersion Include="Serilog.Sinks.EventLog" Version="4.0.0" />
   </ItemGroup>
 
+  <ItemGroup Label="Installer">
+    <PackageVersion Include="WixToolset.Util.wixext" Version="5.0.2" />
+  </ItemGroup>
+
   <ItemGroup Label="Test">
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.3" />

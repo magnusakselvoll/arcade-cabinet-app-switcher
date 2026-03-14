@@ -63,29 +63,36 @@ Each profile specifies either the commands to run or a special action (`reboot`/
 
 See [SPEC.md](SPEC.md) for the full configuration format and validation rules.
 
+## Installation (Windows)
+
+Download the `.msi` from the [Releases](https://github.com/magnusakselvoll/arcade-cabinet-app-switcher/releases) page and run it. The installer:
+
+- Copies files to `C:\Program Files\ArcadeCabinetSwitcher\`
+- Registers the `ArcadeCabinetSwitcher` Windows service (auto-start, LocalSystem account)
+- Configures the service recovery policy automatically (see below)
+- Preserves existing `appsettings.json` and `profiles.json` when upgrading
+
+After installation, the service starts immediately. Edit `profiles.json` in the install directory to configure your profiles, then restart the service.
+
 ## Service Configuration (Windows)
-
-After installing the service, two additional configuration steps are required (run as Administrator):
-
-### Recovery Policy (FR-4.3)
-
-Configure automatic recovery so the service restarts on failure:
-
-```cmd
-sc.exe failure ArcadeCabinetSwitcher reset= 86400 actions= restart/5000/restart/5000/reboot/5000
-```
-
-This restarts the service after the first and second failures (with a 5-second delay) and reboots the machine after the third failure within a 24-hour window.
 
 ### User Account (FR-4.2)
 
-By default, Windows services run as `LocalSystem`. To run as a specific user (e.g., the auto-login arcade account):
+By default, Windows services run as `LocalSystem`. To run as a specific user (e.g., the auto-login arcade account), run as Administrator:
 
 ```cmd
 sc.exe config ArcadeCabinetSwitcher obj= "DOMAIN\username" password= "password"
 ```
 
-> **Note:** Issue #10 (MSI installer) will automate both of these steps as part of the installation wizard.
+### Recovery Policy (FR-4.3)
+
+The MSI installer configures the recovery policy automatically: restart on the first and second failure (5-second delay), reboot on the third failure within a 24-hour window.
+
+For manual installs, configure recovery with (run as Administrator):
+
+```cmd
+sc.exe failure ArcadeCabinetSwitcher reset= 86400 actions= restart/5000/restart/5000/reboot/5000
+```
 
 ## Logging
 
