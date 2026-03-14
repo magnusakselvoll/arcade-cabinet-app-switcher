@@ -32,13 +32,13 @@
     <UIRef Id="WixUI_Minimal" />
 
     <UI>
-      <ProgressText Action="InstallFiles">Installing application files...</ProgressText>
-      <ProgressText Action="InstallServices">Registering Windows service...</ProgressText>
-      <ProgressText Action="StartServices">Starting Windows service...</ProgressText>
-      <ProgressText Action="StopServices">Stopping Windows service...</ProgressText>
-      <ProgressText Action="DeleteServices">Removing Windows service...</ProgressText>
-      <ProgressText Action="RemoveFiles">Removing old files...</ProgressText>
-      <ProgressText Action="RemoveExistingProducts">Removing previous version...</ProgressText>
+      <ProgressText Action="InstallFiles" Message="Installing application files..." />
+      <ProgressText Action="InstallServices" Message="Registering Windows service..." />
+      <ProgressText Action="StartServices" Message="Starting Windows service..." />
+      <ProgressText Action="StopServices" Message="Stopping Windows service..." />
+      <ProgressText Action="DeleteServices" Message="Removing Windows service..." />
+      <ProgressText Action="RemoveFiles" Message="Removing old files..." />
+      <ProgressText Action="RemoveExistingProducts" Message="Removing previous version..." />
     </UI>
 
     <!--
