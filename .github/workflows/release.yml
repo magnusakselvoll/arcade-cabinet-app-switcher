@@ -38,7 +38,11 @@ jobs:
 
       - name: Extract version from tag
         id: version
-        run: echo "VERSION=$($env:GITHUB_REF_NAME -replace '^v','')" >> $env:GITHUB_OUTPUT
+        run: |
+          $version = $env:GITHUB_REF_NAME -replace '^v',''
+          $msiVersion = $version -replace '[-+].*$',''
+          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+          echo "MSI_VERSION=$msiVersion" >> $env:GITHUB_OUTPUT
 
       - name: Publish win-x64
         run: >
@@ -54,7 +58,7 @@ jobs:
         run: >
           dotnet build installer/ArcadeCabinetSwitcher.Installer/ArcadeCabinetSwitcher.Installer.wixproj
           --configuration Release
-          -p:InstallerVersion=${{ steps.version.outputs.VERSION }}
+          -p:InstallerVersion=${{ steps.version.outputs.MSI_VERSION }}
           "-p:PublishDir=${{ github.workspace }}\publish\win-x64\"
 
       - name: Zip release asset
