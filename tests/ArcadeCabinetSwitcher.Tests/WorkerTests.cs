@@ -108,7 +108,7 @@ public class WorkerTests
         await cts.CancelAsync();
         await worker.StopAsync(CancellationToken.None);
 
-        Assert.AreEqual(1, pm.TerminateCallCount);
+        Assert.AreEqual(2, pm.TerminateCallCount); // 1 from profile switch + 1 from StopAsync
         Assert.AreEqual(2, pm.LaunchedProfiles.Count);
         Assert.AreEqual("menu", pm.LaunchedProfiles[1]);
     }
@@ -131,7 +131,7 @@ public class WorkerTests
         await cts.CancelAsync();
         await worker.StopAsync(CancellationToken.None);
 
-        Assert.AreEqual(1, pm.TerminateCallCount);
+        Assert.AreEqual(2, pm.TerminateCallCount); // 1 from profile switch + 1 from StopAsync
         Assert.AreEqual(1, sa.ExecutedActions.Count);
         Assert.AreEqual(ProfileAction.Reboot, sa.ExecutedActions[0]);
         // LaunchProfileAsync should NOT have been called for the action profile
@@ -154,7 +154,7 @@ public class WorkerTests
         await cts.CancelAsync();
         await worker.StopAsync(CancellationToken.None);
 
-        Assert.AreEqual(0, pm.TerminateCallCount);
+        Assert.AreEqual(1, pm.TerminateCallCount); // 0 from failed switch + 1 from StopAsync
     }
 
     [TestMethod]
@@ -191,7 +191,37 @@ public class WorkerTests
         await cts.CancelAsync();
         await worker.StopAsync(CancellationToken.None);
 
-        Assert.AreEqual(1, blockingPm.TerminateCallCount, "Second switch should have been ignored");
+        Assert.AreEqual(2, blockingPm.TerminateCallCount, "Second switch should have been ignored (count includes 1 from StopAsync)"); // 1 from first switch + 1 from StopAsync
+    }
+
+    // ── shutdown ──────────────────────────────────────────────────────────────
+
+    [TestMethod]
+    public async Task StopAsync_TerminatesActiveProfile()
+    {
+        var config = MakeConfig("game1", MakeProfile("game1", ["game.exe"]));
+        var worker = MakeWorker(config, out _, out var pm, out _);
+        using var cts = new CancellationTokenSource();
+
+        await worker.StartAsync(cts.Token);
+        await cts.CancelAsync();
+        await worker.StopAsync(CancellationToken.None);
+
+        Assert.AreEqual(1, pm.TerminateCallCount);
+    }
+
+    [TestMethod]
+    public async Task StopAsync_StopsInputHandler()
+    {
+        var config = MakeConfig("game1", MakeProfile("game1", ["game.exe"]));
+        var worker = MakeWorker(config, out var ih, out _, out _);
+        using var cts = new CancellationTokenSource();
+
+        await worker.StartAsync(cts.Token);
+        await cts.CancelAsync();
+        await worker.StopAsync(CancellationToken.None);
+
+        Assert.IsTrue(ih.StopCalled);
     }
 
     // ── stubs / spies ─────────────────────────────────────────────────────────
@@ -210,6 +240,8 @@ public class WorkerTests
         /// <summary>Completes when the Worker calls StartAsync (i.e., the event subscription is set up).</summary>
         public Task WhenStarted => _startedTcs.Task;
 
+        public bool StopCalled { get; private set; }
+
         public void RaiseProfileSwitchRequested(string profileName) =>
             ProfileSwitchRequested?.Invoke(this, profileName);
 
@@ -220,7 +252,10 @@ public class WorkerTests
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
-            => Task.CompletedTask;
+        {
+            StopCalled = true;
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class SpyProcessManager : IProcessManager
