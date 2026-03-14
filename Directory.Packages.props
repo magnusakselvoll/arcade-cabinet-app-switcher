@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup Label="Installer">
+    <PackageVersion Include="WixToolset.UI.wixext" Version="5.0.2" />
     <PackageVersion Include="WixToolset.Util.wixext" Version="5.0.2" />
   </ItemGroup>
 

@@ -107,6 +107,8 @@ The Arcade Cabinet App Switcher is a Windows service that acts as an application
 - **FR-5.2** The installer registers the service with Windows and configures the recovery policy
 - **FR-5.3** The installer places the configuration file at the expected location with default/example content if no configuration exists
 - **FR-5.4** The installer supports upgrading an existing installation without requiring manual uninstallation
+- **FR-5.5** The installer recovers gracefully from interrupted installations — re-running the same version overwrites the previous installation regardless of its state
+- **FR-5.6** The installer displays the locations of configuration files and log files in the finish dialog so operators know where to find them after installation
 
 ### FR-6: Updates
 

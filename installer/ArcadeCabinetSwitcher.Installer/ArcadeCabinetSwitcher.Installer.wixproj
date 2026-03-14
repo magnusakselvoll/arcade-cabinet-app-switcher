@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="WixToolset.UI.wixext" />
     <PackageReference Include="WixToolset.Util.wixext" />
   </ItemGroup>
 
