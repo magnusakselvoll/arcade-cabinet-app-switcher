@@ -42,8 +42,14 @@ public class Worker(
         }
 
         await Task.Delay(Timeout.Infinite, stoppingToken);
+    }
 
+    public override async Task StopAsync(CancellationToken cancellationToken)
+    {
         logger.LogInformation(LogEvents.ServiceStopping, "Arcade Cabinet App Switcher stopping");
+        await inputHandler.StopAsync(cancellationToken);
+        await processManager.TerminateActiveProfileAsync(cancellationToken);
+        await base.StopAsync(cancellationToken);
     }
 
     private async void OnProfileSwitchRequested(string profileName, AppSwitcherConfig config, CancellationToken cancellationToken)

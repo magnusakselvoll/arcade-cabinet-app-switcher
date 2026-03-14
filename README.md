@@ -63,6 +63,30 @@ Each profile specifies either the commands to run or a special action (`reboot`/
 
 See [SPEC.md](SPEC.md) for the full configuration format and validation rules.
 
+## Service Configuration (Windows)
+
+After installing the service, two additional configuration steps are required (run as Administrator):
+
+### Recovery Policy (FR-4.3)
+
+Configure automatic recovery so the service restarts on failure:
+
+```cmd
+sc.exe failure ArcadeCabinetSwitcher reset= 86400 actions= restart/5000/restart/5000/reboot/5000
+```
+
+This restarts the service after the first and second failures (with a 5-second delay) and reboots the machine after the third failure within a 24-hour window.
+
+### User Account (FR-4.2)
+
+By default, Windows services run as `LocalSystem`. To run as a specific user (e.g., the auto-login arcade account):
+
+```cmd
+sc.exe config ArcadeCabinetSwitcher obj= "DOMAIN\username" password= "password"
+```
+
+> **Note:** Issue #10 (MSI installer) will automate both of these steps as part of the installation wizard.
+
 ## Logging
 
 Logging is configured in `appsettings.json` under the `Serilog` key. By default, events are written to the **console** and to a **rolling daily log file** under `logs/`.
