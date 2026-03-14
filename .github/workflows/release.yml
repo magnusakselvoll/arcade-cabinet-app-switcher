@@ -10,7 +10,7 @@ permissions:
 jobs:
   build-and-release:
     name: Build and Release
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -24,19 +24,21 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', 'Directory.Packages.props') }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.wixproj', 'Directory.Packages.props') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: |
+          dotnet restore
+          dotnet restore installer/ArcadeCabinetSwitcher.Installer/ArcadeCabinetSwitcher.Installer.wixproj
 
       - name: Test
         run: dotnet test --configuration Release --logger "console;verbosity=normal" --filter "TestCategory!=Integration"
 
       - name: Extract version from tag
         id: version
-        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        run: echo "VERSION=$($env:GITHUB_REF_NAME -replace '^v','')" >> $env:GITHUB_OUTPUT
 
       - name: Publish win-x64
         run: >
@@ -48,15 +50,27 @@ jobs:
           -p:IncludeNativeLibrariesForSelfExtract=true
           --output publish/win-x64
 
-      - name: Zip release asset
-        run: |
-          cd publish/win-x64
-          zip -r "../../ArcadeCabinetSwitcher-${{ steps.version.outputs.VERSION }}-win-x64.zip" .
+      - name: Build MSI
+        run: >
+          dotnet build installer/ArcadeCabinetSwitcher.Installer/ArcadeCabinetSwitcher.Installer.wixproj
+          --configuration Release
+          -p:InstallerVersion=${{ steps.version.outputs.VERSION }}
+          "-p:PublishDir=${{ github.workspace }}\publish\win-x64\"
 
-      - name: Upload release asset
+      - name: Zip release asset
+        run: >
+          Compress-Archive
+          -Path publish/win-x64/*
+          -DestinationPath "ArcadeCabinetSwitcher-${{ steps.version.outputs.VERSION }}-win-x64.zip"
+
+      - name: Stage MSI for upload
+        run: |
+          $msi = Get-ChildItem -Path installer -Recurse -Filter "*.msi" | Select-Object -First 1
+          Copy-Item $msi.FullName "ArcadeCabinetSwitcher-${{ steps.version.outputs.VERSION }}-win-x64.msi"
+
+      - name: Upload release assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: >
-          gh release upload "${{ github.ref_name }}"
-          "ArcadeCabinetSwitcher-${{ steps.version.outputs.VERSION }}-win-x64.zip"
-          --clobber
+        run: |
+          gh release upload "${{ github.ref_name }}" "ArcadeCabinetSwitcher-${{ steps.version.outputs.VERSION }}-win-x64.zip" --clobber
+          gh release upload "${{ github.ref_name }}" "ArcadeCabinetSwitcher-${{ steps.version.outputs.VERSION }}-win-x64.msi" --clobber

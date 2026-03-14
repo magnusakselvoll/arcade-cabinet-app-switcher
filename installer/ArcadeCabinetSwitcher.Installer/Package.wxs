@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+
+  <Package Name="Arcade Cabinet App Switcher"
+           Language="1033"
+           Version="$(InstallerVersion)"
+           Manufacturer="Magnus Akselvoll"
+           UpgradeCode="{A7E8B5C6-D9F0-4321-8765-12AB34CD56EF}"
+           Platform="x64">
+
+    <!--
+      MajorUpgrade scheduled afterInstallExecute so the new version installs first.
+      This ensures NeverOverwrite components (appsettings.json, profiles.json) are
+      retained when the old version is subsequently uninstalled during an upgrade.
+    -->
+    <MajorUpgrade Schedule="afterInstallExecute"
+                  DowngradeErrorMessage="A newer version of Arcade Cabinet App Switcher is already installed." />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <Feature Id="Complete" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+    </Feature>
+
+  </Package>
+
+  <Fragment>
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="ArcadeCabinetSwitcher" />
+    </StandardDirectory>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+
+      <!--
+        Main executable with service registration and recovery policy (FR-4.3).
+        Recovery: restart after 1st and 2nd failure, reboot after 3rd, reset window = 1 day.
+      -->
+      <Component Id="MainExecutable">
+        <File Source="$(PublishDir)ArcadeCabinetSwitcher.exe" KeyPath="yes" />
+        <ServiceInstall Id="ServiceInstall"
+                        Name="ArcadeCabinetSwitcher"
+                        DisplayName="Arcade Cabinet App Switcher"
+                        Description="Launches and switches profiles on an arcade cabinet."
+                        Start="auto"
+                        Type="ownProcess"
+                        Account="LocalSystem"
+                        ErrorControl="normal" />
+        <ServiceControl Id="ServiceControl"
+                        Name="ArcadeCabinetSwitcher"
+                        Start="install"
+                        Stop="both"
+                        Remove="uninstall"
+                        Wait="yes" />
+        <util:ServiceConfig ServiceName="ArcadeCabinetSwitcher"
+                            FirstFailureActionType="restart"
+                            SecondFailureActionType="restart"
+                            ThirdFailureActionType="reboot"
+                            RestartServiceDelayInSeconds="5"
+                            ResetPeriodInDays="1" />
+      </Component>
+
+      <!-- NeverOverwrite preserves user edits to appsettings.json across upgrades (FR-5.3) -->
+      <Component Id="AppSettings" NeverOverwrite="yes">
+        <File Source="$(PublishDir)appsettings.json" KeyPath="yes" />
+      </Component>
+
+      <!-- NeverOverwrite preserves user-configured profiles.json across upgrades (FR-5.3) -->
+      <Component Id="ProfilesConfig" NeverOverwrite="yes">
+        <File Source="$(PublishDir)profiles.json" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+  </Fragment>
+
+</Wix>

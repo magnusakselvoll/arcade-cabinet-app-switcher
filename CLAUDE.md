@@ -46,6 +46,11 @@ dotnet test
 
 # Run the service locally (gracefully degrades on non-Windows)
 dotnet run --project src/ArcadeCabinetSwitcher
+
+# Build MSI installer (Windows only; publish win-x64 first)
+dotnet build installer/ArcadeCabinetSwitcher.Installer/ArcadeCabinetSwitcher.Installer.wixproj ^
+  -p:InstallerVersion=1.0.0 ^
+  "-p:PublishDir=%CD%\publish\win-x64\"
 ```
 
 ## Architecture
@@ -63,6 +68,11 @@ arcade-cabinet-app-switcher/
 │       ├── Configuration/              # Config POCOs, IConfigurationLoader, ConfigurationLoader, ConfigurationValidator
 │       ├── Input/                      # IInputHandler — joystick monitoring
 │       └── ProcessManagement/          # IProcessManager — process lifecycle
+├── installer/
+│   ├── Directory.Build.props           # Empty — stops root Directory.Build.props from applying to WiX project
+│   └── ArcadeCabinetSwitcher.Installer/
+│       ├── ArcadeCabinetSwitcher.Installer.wixproj  # WiX v5 SDK-style project (NOT in .slnx — Windows-only)
+│       └── Package.wxs                 # MSI definition: service install, recovery policy, config preservation
 └── tests/
     └── ArcadeCabinetSwitcher.Tests/    # MSTest test project
 ```
@@ -74,6 +84,7 @@ Key decisions:
 - **Logging**: Serilog is used as the logging backend (infrastructure only — wired in `Program.cs` via `UseSerilog()`). All application code uses `Microsoft.Extensions.Logging.ILogger<T>`. Structured event IDs are defined in `src/ArcadeCabinetSwitcher/LogEvents.cs`. Sinks (Console, File, Windows Event Log) are configured in `appsettings.json` under the `Serilog` key.
 - **Configuration loading**: Profile configuration is loaded from `profiles.json` (separate from `appsettings.json`) using `System.Text.Json`. `ConfigurationLoader` takes an optional `configFilePath` constructor parameter (defaults to `AppContext.BaseDirectory/profiles.json`) to enable testing without mocking. `ConfigurationValidator` is an `internal` static class with `InternalsVisibleTo` for the test project.
 - **MSTest assertions**: MSTest 4.x removed `Assert.ThrowsException<T>` and `[ExpectedException]`; use `Assert.ThrowsExactly<T>` instead.
+- **WiX installer**: WiX v5 SDK-style project (`Sdk="WixToolset.Sdk/5.0.2"`). Not added to the `.slnx` — WiX only builds on Windows, whereas CI (`dotnet build`/`dotnet test`) runs on ubuntu-latest. Built explicitly in the release workflow only. `installer/Directory.Build.props` is intentionally empty to prevent the root `Directory.Build.props` (C# settings) from being applied to the WiX project.
 
 ## Tech Stack
 
