@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <InstallerVersion Condition="'$(InstallerVersion)' == ''">0.0.1</InstallerVersion>
+    <InstallerPlatform>x64</InstallerPlatform>
     <PublishDir Condition="'$(PublishDir)' == ''">..\..\publish\win-x64\</PublishDir>
     <DefineConstants>InstallerVersion=$(InstallerVersion);PublishDir=$(PublishDir)</DefineConstants>
   </PropertyGroup>

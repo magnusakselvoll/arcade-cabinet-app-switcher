@@ -6,8 +6,7 @@
            Language="1033"
            Version="$(InstallerVersion)"
            Manufacturer="Magnus Akselvoll"
-           UpgradeCode="{A7E8B5C6-D9F0-4321-8765-12AB34CD56EF}"
-           Platform="x64">
+           UpgradeCode="{A7E8B5C6-D9F0-4321-8765-12AB34CD56EF}">
 
     <!--
       MajorUpgrade scheduled afterInstallExecute so the new version installs first.
