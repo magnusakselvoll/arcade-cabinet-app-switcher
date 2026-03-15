@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace ArcadeCabinetSwitcher.Configuration;
 
 /// <summary>
@@ -17,9 +19,10 @@ public sealed class ProfileConfig
     public required string Name { get; init; }
 
     /// <summary>
-    /// Command strings to execute for this profile. Mutually exclusive with <see cref="Action"/>.
+    /// Commands to execute for this profile. Each entry may be a plain string or an object with
+    /// <c>command</c> and optional <c>workingDirectory</c>. Mutually exclusive with <see cref="Action"/>.
     /// </summary>
-    public IReadOnlyList<string>? Commands { get; init; }
+    public IReadOnlyList<CommandConfig>? Commands { get; init; }
 
     /// <summary>
     /// Special system action for this profile. Mutually exclusive with <see cref="Commands"/>.
@@ -27,6 +30,23 @@ public sealed class ProfileConfig
     public ProfileAction? Action { get; init; }
 
     public required SwitchComboConfig SwitchCombo { get; init; }
+}
+
+/// <summary>
+/// A single command entry. Supports both plain-string and object forms in JSON via
+/// <see cref="CommandConfigConverter"/>:
+/// <code>
+/// "app.exe"
+/// { "command": "app.exe", "workingDirectory": "C:\\Games" }
+/// </code>
+/// When <see cref="WorkingDirectory"/> is omitted, the process is started in the directory
+/// containing the executable.
+/// </summary>
+[JsonConverter(typeof(CommandConfigConverter))]
+public sealed class CommandConfig
+{
+    public required string Command { get; init; }
+    public string? WorkingDirectory { get; init; }
 }
 
 /// <summary>

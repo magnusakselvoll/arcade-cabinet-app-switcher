@@ -17,7 +17,7 @@ public class InputHandlerTests
             Profiles = profiles.Select(p => new ProfileConfig
             {
                 Name = p.Name,
-                Commands = ["notepad.exe"],
+                Commands = [new CommandConfig { Command = "notepad.exe" }],
                 SwitchCombo = new SwitchComboConfig
                 {
                     Buttons = p.Buttons,

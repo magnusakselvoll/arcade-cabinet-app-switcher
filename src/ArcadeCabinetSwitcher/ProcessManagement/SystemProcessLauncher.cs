@@ -4,11 +4,12 @@ namespace ArcadeCabinetSwitcher.ProcessManagement;
 
 internal sealed class SystemProcessLauncher : IProcessLauncher
 {
-    public IProcessHandle Start(string fileName, string arguments)
+    public IProcessHandle Start(string fileName, string arguments, string? workingDirectory)
     {
         var startInfo = new ProcessStartInfo(fileName, arguments)
         {
-            UseShellExecute = true
+            UseShellExecute = true,
+            WorkingDirectory = workingDirectory ?? string.Empty
         };
 
         var process = Process.Start(startInfo)

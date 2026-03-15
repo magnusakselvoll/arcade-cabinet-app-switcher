@@ -50,7 +50,7 @@ public class ConfigurationLoaderTests
         Assert.AreEqual(1, config.Profiles.Count);
         Assert.AreEqual("mame", config.Profiles[0].Name);
         Assert.AreEqual(1, config.Profiles[0].Commands!.Count);
-        Assert.AreEqual("mame.exe", config.Profiles[0].Commands![0]);
+        Assert.AreEqual("mame.exe", config.Profiles[0].Commands![0].Command);
     }
 
     [TestMethod]
@@ -238,6 +238,80 @@ public class ConfigurationLoaderTests
 
         var config = MakeLoader(path).Load();
         Assert.AreEqual(ProfileAction.Shutdown, config.Profiles[0].Action);
+    }
+
+    // ── command forms ─────────────────────────────────────────────────────────
+
+    [TestMethod]
+    public void Load_CommandAsString_DeserializesCommand()
+    {
+        var path = WriteTempJson("""
+            {
+              "defaultProfile": "app",
+              "profiles": [
+                {
+                  "name": "app",
+                  "commands": ["C:\\Games\\app.exe"],
+                  "switchCombo": { "buttons": ["B1"], "holdDurationSeconds": 5 }
+                }
+              ]
+            }
+            """);
+
+        var config = MakeLoader(path).Load();
+        var cmd = config.Profiles[0].Commands![0];
+        Assert.AreEqual("C:\\Games\\app.exe", cmd.Command);
+        Assert.IsNull(cmd.WorkingDirectory);
+    }
+
+    [TestMethod]
+    public void Load_CommandAsObject_DeserializesCommandAndWorkingDirectory()
+    {
+        var path = WriteTempJson("""
+            {
+              "defaultProfile": "app",
+              "profiles": [
+                {
+                  "name": "app",
+                  "commands": [{ "command": "C:\\Games\\app.exe", "workingDirectory": "C:\\Games" }],
+                  "switchCombo": { "buttons": ["B1"], "holdDurationSeconds": 5 }
+                }
+              ]
+            }
+            """);
+
+        var config = MakeLoader(path).Load();
+        var cmd = config.Profiles[0].Commands![0];
+        Assert.AreEqual("C:\\Games\\app.exe", cmd.Command);
+        Assert.AreEqual("C:\\Games", cmd.WorkingDirectory);
+    }
+
+    [TestMethod]
+    public void Load_MixedCommandForms_DeserializesBoth()
+    {
+        var path = WriteTempJson("""
+            {
+              "defaultProfile": "app",
+              "profiles": [
+                {
+                  "name": "app",
+                  "commands": [
+                    "C:\\Games\\app.exe",
+                    { "command": "C:\\Other\\tool.exe", "workingDirectory": "C:\\Other" }
+                  ],
+                  "switchCombo": { "buttons": ["B1"], "holdDurationSeconds": 5 }
+                }
+              ]
+            }
+            """);
+
+        var config = MakeLoader(path).Load();
+        var commands = config.Profiles[0].Commands!;
+        Assert.AreEqual(2, commands.Count);
+        Assert.AreEqual("C:\\Games\\app.exe", commands[0].Command);
+        Assert.IsNull(commands[0].WorkingDirectory);
+        Assert.AreEqual("C:\\Other\\tool.exe", commands[1].Command);
+        Assert.AreEqual("C:\\Other", commands[1].WorkingDirectory);
     }
 
     // ── tolerance features ───────────────────────────────────────────────────
