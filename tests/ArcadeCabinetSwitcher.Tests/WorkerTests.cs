@@ -67,6 +67,7 @@ public class WorkerTests
         using var cts = new CancellationTokenSource();
 
         await worker.StartAsync(cts.Token);
+        await pm.WaitForLaunchAsync(); // wait for default "game1" to be launched
         await cts.CancelAsync();
         await worker.StopAsync(CancellationToken.None);
 
@@ -101,9 +102,10 @@ public class WorkerTests
 
         await worker.StartAsync(cts.Token);
         await ih.WhenStarted;
+        await pm.WaitForLaunchAsync(); // wait for default "game1" to be launched
 
         ih.RaiseProfileSwitchRequested("menu");
-        await Task.Delay(50); // let async void complete
+        await pm.WaitForLaunchAsync(); // wait for "menu" to be launched
 
         await cts.CancelAsync();
         await worker.StopAsync(CancellationToken.None);
@@ -124,6 +126,7 @@ public class WorkerTests
 
         await worker.StartAsync(cts.Token);
         await ih.WhenStarted;
+        await pm.WaitForLaunchAsync(); // wait for default "game1" to be launched
 
         ih.RaiseProfileSwitchRequested("reboot-profile");
         await Task.Delay(50);
@@ -261,13 +264,18 @@ public class WorkerTests
     private sealed class SpyProcessManager : IProcessManager
     {
         private readonly List<string> _launchedProfiles = [];
+        private readonly SemaphoreSlim _launchSignal = new(0);
 
         public IReadOnlyList<string> LaunchedProfiles => _launchedProfiles;
         public int TerminateCallCount { get; private set; }
 
+        public async Task WaitForLaunchAsync()
+            => await _launchSignal.WaitAsync(TimeSpan.FromSeconds(2));
+
         public Task LaunchProfileAsync(ProfileConfig profile, CancellationToken cancellationToken)
         {
             _launchedProfiles.Add(profile.Name);
+            _launchSignal.Release();
             return Task.CompletedTask;
         }
 

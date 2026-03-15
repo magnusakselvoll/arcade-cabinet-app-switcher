@@ -96,7 +96,13 @@ sc.exe failure ArcadeCabinetSwitcher reset= 86400 actions= restart/5000/restart/
 
 ## Logging
 
-Logging is configured in `appsettings.json` under the `Serilog` key. By default, events are written to the **console** and to a **rolling daily log file** under `logs/`.
+By default, events are written to the **console** and to a **rolling daily log file** at:
+
+```
+C:\ProgramData\ArcadeCabinetSwitcher\logs\arcade-cabinet-switcher.log
+```
+
+The directory is created automatically on first run.
 
 ### Enable Windows Event Log
 
@@ -111,6 +117,20 @@ Then uncomment the `EventLog` sink block in `appsettings.json`.
 ### Change the minimum log level
 
 Edit the `MinimumLevel.Default` value in `appsettings.json` (e.g., `"Debug"` for verbose output).
+
+## Button Discovery
+
+Not sure which button names to use in `profiles.json`? The service has built-in button discovery:
+
+1. Start the service with your joystick connected
+2. Hold any combination of **2 or more buttons** for **10 seconds**
+3. Check the log file — the service will log a ready-to-use `profiles.json` snippet:
+
+```
+Buttons held for 10+ seconds: Button1, Button3. Use in profiles.json: "buttons": ["Button1", "Button3"], "holdDurationSeconds": 10
+```
+
+No debug mode or configuration change required.
 
 ## License
 
