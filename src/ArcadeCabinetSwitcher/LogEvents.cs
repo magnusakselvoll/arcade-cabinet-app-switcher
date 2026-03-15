@@ -22,6 +22,7 @@ public static class LogEvents
     public static readonly EventId ConfigurationLoaded = new(2000, nameof(ConfigurationLoaded));
     public static readonly EventId ConfigurationInvalid = new(2001, nameof(ConfigurationInvalid));
     public static readonly EventId ConfigurationMissing = new(2002, nameof(ConfigurationMissing));
+    public static readonly EventId ConfigurationPathResolved = new(2003, nameof(ConfigurationPathResolved));
 
     // Profile switching
     public static readonly EventId ProfileSwitchStarted = new(3000, nameof(ProfileSwitchStarted));
