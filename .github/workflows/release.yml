@@ -51,7 +51,7 @@ jobs:
           --runtime win-x64
           --self-contained true
           -p:PublishSingleFile=true
-          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:IncludeNativeLibrariesForSelfExtract=false
           --output publish/win-x64
 
       - name: Build MSI

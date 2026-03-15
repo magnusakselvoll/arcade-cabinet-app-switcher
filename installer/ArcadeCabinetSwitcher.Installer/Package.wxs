@@ -48,7 +48,7 @@
     <SetProperty Id="WIXUI_EXITDIALOGOPTIONALTEXT"
                  Before="ExecuteAction"
                  Sequence="ui"
-                 Value="Configuration files: [INSTALLFOLDER]profiles.json, [INSTALLFOLDER]appsettings.json&#xA;Log files: [INSTALLFOLDER]logs\" />
+                 Value="Configuration files:&#xA;  [INSTALLFOLDER]profiles.json&#xA;  [INSTALLFOLDER]appsettings.json&#xA;Log files:&#xA;  [CommonAppDataFolder]ArcadeCabinetSwitcher\logs\" />
 
   </Package>
 

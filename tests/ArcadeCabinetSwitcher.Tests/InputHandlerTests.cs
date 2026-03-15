@@ -268,6 +268,58 @@ public class InputHandlerTests
         await handler.StopAsync(CancellationToken.None);
     }
 
+    [TestMethod]
+    public async Task ButtonsHeldFor10Seconds_LogsWithoutCrash()
+    {
+        var fakeTime = new FakeTimeProvider();
+        var stub = new StubJoystickReader(initialized: true);
+        stub.SetState(["Button1", "Button3"]);
+
+        var handler = new InputHandler(
+            NullLogger<InputHandler>.Instance, stub, fakeTime, TimeSpan.FromMilliseconds(1), false);
+        var config = CreateConfig(("Profile1", ["Button5", "Button6"], 3)); // Different combo so no profile switch
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        await handler.StartAsync(config, cts.Token);
+
+        // Allow first poll to record discovery start timestamp
+        await Task.Delay(20);
+
+        // Advance past 10-second discovery threshold
+        fakeTime.Advance(TimeSpan.FromSeconds(10));
+
+        // Allow the poll loop to process the elapsed time
+        await Task.Delay(20);
+
+        // No crash; test passes if we get here
+        await handler.StopAsync(CancellationToken.None);
+    }
+
+    [TestMethod]
+    public async Task ButtonsReleasedBefore10Seconds_NoIssue()
+    {
+        var fakeTime = new FakeTimeProvider();
+        var stub = new StubJoystickReader(initialized: true);
+
+        var handler = new InputHandler(
+            NullLogger<InputHandler>.Instance, stub, fakeTime, TimeSpan.FromMilliseconds(1), false);
+        var config = CreateConfig(("Profile1", ["Button5", "Button6"], 3));
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        await handler.StartAsync(config, cts.Token);
+
+        // Hold two buttons briefly
+        stub.SetState(["Button1", "Button3"]);
+        await Task.Delay(20);
+
+        // Release before 10-second threshold (no fake time advancement)
+        stub.SetState([]);
+        await Task.Delay(20);
+
+        // No crash; test passes if we get here
+        await handler.StopAsync(CancellationToken.None);
+    }
+
     /// <summary>
     /// Stub joystick reader that returns a controllable set of pressed buttons.
     /// </summary>

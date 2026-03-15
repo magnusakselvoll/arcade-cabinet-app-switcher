@@ -15,7 +15,16 @@ internal sealed class SdlJoystickReader : IJoystickReader
 
     public unsafe bool Initialize()
     {
-        _sdl = Sdl.GetApi();
+        try
+        {
+            _sdl = Sdl.GetApi();
+        }
+        catch (Exception ex) when (ex is FileNotFoundException or DllNotFoundException)
+        {
+            _logger.LogError(LogEvents.SdlLibraryNotFound,
+                "SDL2 native library not found. Ensure SDL2.dll is present alongside the executable. Input monitoring disabled.");
+            return false;
+        }
 
         // Headless hints — must be set before SDL_Init.
         // Windows: spin up a dedicated joystick thread so no Win32 message pump is needed.

@@ -80,6 +80,9 @@ internal sealed class InputHandler : IInputHandler
 
         var comboStates = combos.Select(_ => new ComboState()).ToList();
         IReadOnlySet<string>? lastDebugButtons = null;
+        HashSet<string>? discoveryButtons = null;
+        long? discoveryStartTimestamp = null;
+        bool discoveryLogged = false;
 
         try
         {
@@ -99,6 +102,36 @@ internal sealed class InputHandler : IInputHandler
                 else if (pressed.Count < 2)
                 {
                     lastDebugButtons = null;
+                }
+
+                // Button discovery: log when 2+ buttons held for 10+ seconds
+                if (pressed.Count >= 2)
+                {
+                    if (discoveryButtons is null || !pressed.SetEquals(discoveryButtons))
+                    {
+                        discoveryButtons = new HashSet<string>(pressed, StringComparer.OrdinalIgnoreCase);
+                        discoveryStartTimestamp = _timeProvider.GetTimestamp();
+                        discoveryLogged = false;
+                    }
+                    else if (!discoveryLogged)
+                    {
+                        var elapsed = _timeProvider.GetElapsedTime(discoveryStartTimestamp!.Value);
+                        if (elapsed >= TimeSpan.FromSeconds(10))
+                        {
+                            var buttonList = string.Join(", ", discoveryButtons.Order());
+                            var jsonButtons = string.Join(", ", discoveryButtons.Order().Select(b => $"\"{b}\""));
+                            _logger.LogInformation(LogEvents.ButtonDiscoveryLogged,
+                                "Buttons held for 10+ seconds: {Buttons}. Use in profiles.json: \"buttons\": [{JsonButtons}], \"holdDurationSeconds\": 10",
+                                buttonList, jsonButtons);
+                            discoveryLogged = true;
+                        }
+                    }
+                }
+                else
+                {
+                    discoveryButtons = null;
+                    discoveryStartTimestamp = null;
+                    discoveryLogged = false;
                 }
 
                 bool eventFired = false;

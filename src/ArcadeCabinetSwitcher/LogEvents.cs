@@ -50,6 +50,8 @@ public static class LogEvents
     public static readonly EventId InputDebugButtonsPressed = new(5006, nameof(InputDebugButtonsPressed));
     public static readonly EventId JoystickAcquired = new(5007, nameof(JoystickAcquired));
     public static readonly EventId JoystickNotFound = new(5008, nameof(JoystickNotFound));
+    public static readonly EventId ButtonDiscoveryLogged = new(5009, nameof(ButtonDiscoveryLogged));
+    public static readonly EventId SdlLibraryNotFound = new(5010, nameof(SdlLibraryNotFound));
 
     // Errors
     public static readonly EventId UnexpectedException = new(9000, nameof(UnexpectedException));
