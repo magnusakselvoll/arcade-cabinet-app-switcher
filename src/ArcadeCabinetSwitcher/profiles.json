@@ -4,7 +4,7 @@
     {
       "name": "mame",
       "commands": [
-        "C:\\Games\\MAME\\mame64.exe"
+        { "command": "C:\\Games\\MAME\\mame64.exe", "workingDirectory": "C:\\Games\\MAME" }
       ],
       "switchCombo": {
         "buttons": ["Button1", "Button2"],

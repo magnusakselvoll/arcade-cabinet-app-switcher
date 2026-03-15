@@ -55,9 +55,15 @@ internal static class ConfigurationValidator
             {
                 foreach (var cmd in profile.Commands!)
                 {
-                    if (string.IsNullOrWhiteSpace(cmd))
+                    if (string.IsNullOrWhiteSpace(cmd.Command))
                     {
                         errors.Add($"Profile '{profile.Name}': Commands must not contain blank entries.");
+                        break;
+                    }
+
+                    if (cmd.WorkingDirectory is not null && string.IsNullOrWhiteSpace(cmd.WorkingDirectory))
+                    {
+                        errors.Add($"Profile '{profile.Name}': Command workingDirectory must not be blank.");
                         break;
                     }
                 }

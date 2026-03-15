@@ -14,7 +14,7 @@ public class ProcessManagerTests
         new()
         {
             Name = name,
-            Commands = commands,
+            Commands = commands.Select(c => new CommandConfig { Command = c }).ToArray(),
             SwitchCombo = new SwitchComboConfig { Buttons = ["B1"], HoldDurationSeconds = 3 }
         };
 
@@ -130,6 +130,45 @@ public class ProcessManagerTests
         Assert.IsTrue(launcher.Launched[0].Disposed);
     }
 
+    // ── working directory tests ───────────────────────────────────────────────
+
+    [TestMethod]
+    public async Task LaunchProfileAsync_NoWorkingDirectory_UsesExecutableDirectory()
+    {
+        var launcher = new StubProcessLauncher();
+        var pm = MakeManager(launcher);
+        var exeDir = Path.Combine(Path.GetTempPath(), "Games", "MAME");
+        var exePath = Path.Combine(exeDir, "mame64.exe");
+        var profile = new ProfileConfig
+        {
+            Name = "p1",
+            Commands = [new CommandConfig { Command = exePath }],
+            SwitchCombo = new SwitchComboConfig { Buttons = ["B1"], HoldDurationSeconds = 3 }
+        };
+
+        await pm.LaunchProfileAsync(profile, CancellationToken.None);
+
+        Assert.AreEqual(exeDir, launcher.Launched[0].WorkingDirectory);
+    }
+
+    [TestMethod]
+    public async Task LaunchProfileAsync_ExplicitWorkingDirectory_UsesProvidedDirectory()
+    {
+        var launcher = new StubProcessLauncher();
+        var pm = MakeManager(launcher);
+        var customDir = Path.Combine(Path.GetTempPath(), "Custom", "Dir");
+        var profile = new ProfileConfig
+        {
+            Name = "p1",
+            Commands = [new CommandConfig { Command = "app.exe", WorkingDirectory = customDir }],
+            SwitchCombo = new SwitchComboConfig { Buttons = ["B1"], HoldDurationSeconds = 3 }
+        };
+
+        await pm.LaunchProfileAsync(profile, CancellationToken.None);
+
+        Assert.AreEqual(customDir, launcher.Launched[0].WorkingDirectory);
+    }
+
     // ── stubs ─────────────────────────────────────────────────────────────────
 
     private sealed class StubProcessLauncher : IProcessLauncher
@@ -145,23 +184,24 @@ public class ProcessManagerTests
         /// <summary>When true, CloseMainWindow immediately marks the process as exited.</summary>
         public bool AutoExitOnClose { get; set; }
 
-        public IProcessHandle Start(string fileName, string arguments)
+        public IProcessHandle Start(string fileName, string arguments, string? workingDirectory)
         {
             if (fileName == FailFileName)
                 throw new InvalidOperationException($"Simulated launch failure for '{fileName}'.");
 
-            var handle = new StubProcessHandle(_nextId++, fileName, AutoExitOnClose);
+            var handle = new StubProcessHandle(_nextId++, fileName, workingDirectory, AutoExitOnClose);
             _launched.Add(handle);
             return handle;
         }
     }
 
-    private sealed class StubProcessHandle(int id, string fileName, bool autoExitOnClose) : IProcessHandle
+    private sealed class StubProcessHandle(int id, string fileName, string? workingDirectory, bool autoExitOnClose) : IProcessHandle
     {
         private readonly TaskCompletionSource _exitTcs = new();
 
         public int Id { get; } = id;
         public string FileName { get; } = fileName;
+        public string? WorkingDirectory { get; } = workingDirectory;
         public bool HasExited { get; private set; }
         public bool CloseMainWindowCalled { get; private set; }
         public bool KillCalled { get; private set; }

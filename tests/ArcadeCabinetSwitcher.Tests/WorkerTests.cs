@@ -15,7 +15,7 @@ public class WorkerTests
         new()
         {
             Name = name,
-            Commands = commands,
+            Commands = commands?.Select(c => new CommandConfig { Command = c }).ToArray(),
             Action = action,
             SwitchCombo = new SwitchComboConfig { Buttons = ["B1"], HoldDurationSeconds = 3 }
         };

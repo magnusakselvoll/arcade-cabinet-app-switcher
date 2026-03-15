@@ -21,7 +21,7 @@ public class ConfigurationValidatorTests
         return new()
         {
             Name = name,
-            Commands = effectiveCommands,
+            Commands = effectiveCommands?.Select(c => new CommandConfig { Command = c }).ToArray(),
             Action = action,
             SwitchCombo = new SwitchComboConfig
             {
@@ -30,6 +30,22 @@ public class ConfigurationValidatorTests
             }
         };
     }
+
+    private static ProfileConfig MakeProfileWithCommandConfigs(
+        string name,
+        CommandConfig[] commandConfigs,
+        string[]? buttons = null,
+        int holdDurationSeconds = 5) =>
+        new()
+        {
+            Name = name,
+            Commands = commandConfigs,
+            SwitchCombo = new SwitchComboConfig
+            {
+                Buttons = buttons ?? ["Button1"],
+                HoldDurationSeconds = holdDurationSeconds
+            }
+        };
 
     private static AppSwitcherConfig MakeConfig(
         string defaultProfile = "app",
@@ -208,6 +224,28 @@ public class ConfigurationValidatorTests
 
         var errors = ConfigurationValidator.Validate(config);
         Assert.IsTrue(errors.Any(e => e.Contains("blank entries")));
+    }
+
+    [TestMethod]
+    public void Validate_CommandWithBlankWorkingDirectory_ReturnsError()
+    {
+        var config = MakeConfig(
+            profiles: [MakeProfileWithCommandConfigs("app",
+                [new CommandConfig { Command = "app.exe", WorkingDirectory = "   " }])]);
+
+        var errors = ConfigurationValidator.Validate(config);
+        Assert.IsTrue(errors.Any(e => e.Contains("workingDirectory")));
+    }
+
+    [TestMethod]
+    public void Validate_CommandWithExplicitWorkingDirectory_ReturnsNoErrors()
+    {
+        var config = MakeConfig(
+            profiles: [MakeProfileWithCommandConfigs("app",
+                [new CommandConfig { Command = "app.exe", WorkingDirectory = "C:\\Games" }])]);
+
+        var errors = ConfigurationValidator.Validate(config);
+        Assert.AreEqual(0, errors.Count);
     }
 
     // ── SwitchCombo ──────────────────────────────────────────────────────────

@@ -25,12 +25,13 @@ internal sealed class ProcessManager : IProcessManager
         if (profile.Commands is null || profile.Commands.Count == 0)
             return Task.CompletedTask;
 
-        foreach (var command in profile.Commands)
+        foreach (var commandConfig in profile.Commands)
         {
             try
             {
-                var (fileName, arguments) = CommandParser.Parse(command);
-                var handle = _processLauncher.Start(fileName, arguments);
+                var (fileName, arguments) = CommandParser.Parse(commandConfig.Command);
+                var workingDirectory = commandConfig.WorkingDirectory ?? Path.GetDirectoryName(fileName) ?? string.Empty;
+                var handle = _processLauncher.Start(fileName, arguments, workingDirectory);
 
                 lock (_lock)
                 {
@@ -38,12 +39,13 @@ internal sealed class ProcessManager : IProcessManager
                 }
 
                 _logger.LogInformation(LogEvents.ProcessLaunched,
-                    "Launched process {ProcessId} for command {Command}", handle.Id, command);
+                    "Launched process {ProcessId} for command {Command} with working directory {WorkingDirectory}",
+                    handle.Id, commandConfig.Command, workingDirectory);
             }
             catch (Exception ex)
             {
                 _logger.LogError(LogEvents.ProcessLaunchFailed, ex,
-                    "Failed to launch command {Command}", command);
+                    "Failed to launch command {Command}", commandConfig.Command);
             }
         }
 
