@@ -23,6 +23,7 @@ internal sealed class CommandConfigConverter : JsonConverter<CommandConfig>
 
         string? command2 = null;
         string? workingDirectory = null;
+        int? delaySeconds = null;
 
         while (reader.Read())
         {
@@ -39,6 +40,8 @@ internal sealed class CommandConfigConverter : JsonConverter<CommandConfig>
                 command2 = reader.GetString();
             else if (propertyName.Equals("workingDirectory", StringComparison.OrdinalIgnoreCase))
                 workingDirectory = reader.GetString();
+            else if (propertyName.Equals("delaySeconds", StringComparison.OrdinalIgnoreCase))
+                delaySeconds = reader.GetInt32();
             else
                 reader.Skip();
         }
@@ -46,12 +49,12 @@ internal sealed class CommandConfigConverter : JsonConverter<CommandConfig>
         if (command2 is null)
             throw new JsonException("CommandConfig object must include a 'command' property.");
 
-        return new CommandConfig { Command = command2, WorkingDirectory = workingDirectory };
+        return new CommandConfig { Command = command2, WorkingDirectory = workingDirectory, DelaySeconds = delaySeconds };
     }
 
     public override void Write(Utf8JsonWriter writer, CommandConfig value, JsonSerializerOptions options)
     {
-        if (value.WorkingDirectory is null)
+        if (value.WorkingDirectory is null && value.DelaySeconds is null)
         {
             writer.WriteStringValue(value.Command);
         }
@@ -59,7 +62,10 @@ internal sealed class CommandConfigConverter : JsonConverter<CommandConfig>
         {
             writer.WriteStartObject();
             writer.WriteString("command", value.Command);
-            writer.WriteString("workingDirectory", value.WorkingDirectory);
+            if (value.WorkingDirectory is not null)
+                writer.WriteString("workingDirectory", value.WorkingDirectory);
+            if (value.DelaySeconds is not null)
+                writer.WriteNumber("delaySeconds", value.DelaySeconds.Value);
             writer.WriteEndObject();
         }
     }

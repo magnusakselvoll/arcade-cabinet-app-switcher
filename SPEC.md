@@ -66,10 +66,10 @@ The Arcade Cabinet App Switcher is a startup application managed by Task Schedul
 ### FR-1: Profiles and Configuration
 
 - **FR-1.1** The service reads its configuration from a JSON settings file at a known location
-- **FR-1.2** The configuration must specify exactly one default profile that is launched at startup
+- **FR-1.2** The configuration may optionally specify a default profile that is launched at startup; if omitted, the application starts without launching any profile and waits for input
 - **FR-1.3** Each profile has:
   - A unique name (string identifier)
-  - One or more commands/programs to execute; each command may optionally specify a `workingDirectory`
+  - One or more commands/programs to execute; each command may optionally specify a `workingDirectory` and a `delaySeconds` (non-negative integer) to delay the launch of that command relative to the preceding one
   - A joystick switch combo (list of buttons) and hold duration in seconds
 - **FR-1.4** Special profiles (reboot, shutdown) are supported via reserved command keywords or system actions rather than executable paths
 - **FR-1.5** The configuration file must be validated on load; the service logs an error and fails to start if the configuration is invalid
@@ -84,7 +84,7 @@ The Arcade Cabinet App Switcher is a startup application managed by Task Schedul
 
 ### FR-3: Process Management
 
-- **FR-3.1** When launching a profile, the service starts each command defined in the profile as a child process. The working directory is set to the explicit `workingDirectory` if provided; otherwise it defaults to the directory containing the executable.
+- **FR-3.1** When launching a profile, the service starts each command defined in the profile as a child process. The working directory is set to the explicit `workingDirectory` if provided; otherwise it defaults to the directory containing the executable. If a command specifies `delaySeconds`, the service waits that many seconds before launching it.
 - **FR-3.2** The service tracks all directly launched processes and discovers their descendant sub-processes
 - **FR-3.3** When terminating a profile, all tracked processes (root and sub-processes) are terminated
 - **FR-3.4** Termination is attempted gracefully first (e.g., WM_CLOSE or equivalent); processes not exiting within a short timeout are forcefully killed
@@ -147,7 +147,7 @@ The configuration is stored as a JSON file. The following is an example showing 
     {
       "name": "steam",
       "commands": [
-        "C:\\Program Files (x86)\\Steam\\steam.exe -bigpicture"
+        { "command": "C:\\Program Files (x86)\\Steam\\steam.exe -bigpicture", "delaySeconds": 3 }
       ],
       "switchCombo": {
         "buttons": ["Button3", "Button4"],

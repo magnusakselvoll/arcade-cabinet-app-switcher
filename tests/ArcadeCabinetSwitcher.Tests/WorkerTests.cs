@@ -20,7 +20,7 @@ public class WorkerTests
             SwitchCombo = new SwitchComboConfig { Buttons = ["B1"], HoldDurationSeconds = 3 }
         };
 
-    private static AppSwitcherConfig MakeConfig(string defaultProfile, params ProfileConfig[] profiles) =>
+    private static AppSwitcherConfig MakeConfig(string? defaultProfile, params ProfileConfig[] profiles) =>
         new() { DefaultProfile = defaultProfile, Profiles = profiles };
 
     private static Worker MakeWorker(
@@ -79,6 +79,20 @@ public class WorkerTests
     public async Task Worker_DefaultProfileNotFound_DoesNotCrash()
     {
         var config = MakeConfig("missing", MakeProfile("other", ["app.exe"]));
+        var worker = MakeWorker(config, out _, out var pm, out _);
+        using var cts = new CancellationTokenSource();
+
+        await worker.StartAsync(cts.Token);
+        await cts.CancelAsync();
+        await worker.StopAsync(CancellationToken.None);
+
+        Assert.AreEqual(0, pm.LaunchedProfiles.Count);
+    }
+
+    [TestMethod]
+    public async Task Worker_NullDefaultProfile_DoesNotLaunchAnyProfile()
+    {
+        var config = MakeConfig(null, MakeProfile("other", ["app.exe"]));
         var worker = MakeWorker(config, out _, out var pm, out _);
         using var cts = new CancellationTokenSource();
 

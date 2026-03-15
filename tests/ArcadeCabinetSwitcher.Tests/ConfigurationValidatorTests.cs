@@ -48,7 +48,7 @@ public class ConfigurationValidatorTests
         };
 
     private static AppSwitcherConfig MakeConfig(
-        string defaultProfile = "app",
+        string? defaultProfile = "app",
         ProfileConfig[]? profiles = null)
     {
         var profileList = profiles ?? [MakeProfile()];
@@ -115,11 +115,19 @@ public class ConfigurationValidatorTests
     }
 
     [TestMethod]
-    public void Validate_EmptyDefaultProfile_ReturnsError()
+    public void Validate_NullDefaultProfile_ReturnsNoErrors()
+    {
+        var config = MakeConfig(defaultProfile: null);
+        var errors = ConfigurationValidator.Validate(config);
+        Assert.AreEqual(0, errors.Count);
+    }
+
+    [TestMethod]
+    public void Validate_EmptyDefaultProfile_ReturnsNoErrors()
     {
         var config = MakeConfig(defaultProfile: "");
         var errors = ConfigurationValidator.Validate(config);
-        Assert.IsTrue(errors.Any(e => e.Contains("DefaultProfile must not be empty")));
+        Assert.AreEqual(0, errors.Count);
     }
 
     [TestMethod]
@@ -290,6 +298,52 @@ public class ConfigurationValidatorTests
         Assert.IsTrue(errors.Any(e => e.Contains("HoldDurationSeconds")));
     }
 
+    // ── DelaySeconds ─────────────────────────────────────────────────────────
+
+    [TestMethod]
+    public void Validate_CommandWithNullDelay_ReturnsNoErrors()
+    {
+        var config = MakeConfig(
+            profiles: [MakeProfileWithCommandConfigs("app",
+                [new CommandConfig { Command = "app.exe", DelaySeconds = null }])]);
+
+        var errors = ConfigurationValidator.Validate(config);
+        Assert.AreEqual(0, errors.Count);
+    }
+
+    [TestMethod]
+    public void Validate_CommandWithZeroDelay_ReturnsNoErrors()
+    {
+        var config = MakeConfig(
+            profiles: [MakeProfileWithCommandConfigs("app",
+                [new CommandConfig { Command = "app.exe", DelaySeconds = 0 }])]);
+
+        var errors = ConfigurationValidator.Validate(config);
+        Assert.AreEqual(0, errors.Count);
+    }
+
+    [TestMethod]
+    public void Validate_CommandWithPositiveDelay_ReturnsNoErrors()
+    {
+        var config = MakeConfig(
+            profiles: [MakeProfileWithCommandConfigs("app",
+                [new CommandConfig { Command = "app.exe", DelaySeconds = 5 }])]);
+
+        var errors = ConfigurationValidator.Validate(config);
+        Assert.AreEqual(0, errors.Count);
+    }
+
+    [TestMethod]
+    public void Validate_CommandWithNegativeDelay_ReturnsError()
+    {
+        var config = MakeConfig(
+            profiles: [MakeProfileWithCommandConfigs("app",
+                [new CommandConfig { Command = "app.exe", DelaySeconds = -1 }])]);
+
+        var errors = ConfigurationValidator.Validate(config);
+        Assert.IsTrue(errors.Any(e => e.Contains("delaySeconds")));
+    }
+
     // ── multiple errors ──────────────────────────────────────────────────────
 
     [TestMethod]
@@ -297,7 +351,7 @@ public class ConfigurationValidatorTests
     {
         var config = new AppSwitcherConfig
         {
-            DefaultProfile = "",
+            DefaultProfile = null,
             Profiles =
             [
                 new ProfileConfig
@@ -311,6 +365,6 @@ public class ConfigurationValidatorTests
         };
 
         var errors = ConfigurationValidator.Validate(config);
-        Assert.IsTrue(errors.Count >= 3, $"Expected at least 3 errors but got {errors.Count}: {string.Join("; ", errors)}");
+        Assert.IsTrue(errors.Count >= 2, $"Expected at least 2 errors but got {errors.Count}: {string.Join("; ", errors)}");
     }
 }

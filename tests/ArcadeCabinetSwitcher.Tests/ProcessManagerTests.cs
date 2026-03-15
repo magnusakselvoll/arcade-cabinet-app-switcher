@@ -169,6 +169,67 @@ public class ProcessManagerTests
         Assert.AreEqual(customDir, launcher.Launched[0].WorkingDirectory);
     }
 
+    // ── delaySeconds ─────────────────────────────────────────────────────────
+
+    [TestMethod]
+    public async Task LaunchProfileAsync_CommandWithDelay_DelaysBeforeLaunch()
+    {
+        var launcher = new StubProcessLauncher();
+        var pm = MakeManager(launcher);
+        var profile = new ProfileConfig
+        {
+            Name = "p1",
+            Commands =
+            [
+                new CommandConfig { Command = "first.exe" },
+                new CommandConfig { Command = "second.exe", DelaySeconds = 1 }
+            ],
+            SwitchCombo = new SwitchComboConfig { Buttons = ["B1"], HoldDurationSeconds = 3 }
+        };
+
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        await pm.LaunchProfileAsync(profile, CancellationToken.None);
+        sw.Stop();
+
+        Assert.AreEqual(2, launcher.Launched.Count);
+        Assert.IsTrue(sw.Elapsed >= TimeSpan.FromSeconds(1),
+            $"Expected at least 1s delay but elapsed was {sw.Elapsed}");
+    }
+
+    [TestMethod]
+    public async Task LaunchProfileAsync_CommandWithZeroDelay_LaunchesWithoutDelay()
+    {
+        var launcher = new StubProcessLauncher();
+        var pm = MakeManager(launcher);
+        var profile = new ProfileConfig
+        {
+            Name = "p1",
+            Commands = [new CommandConfig { Command = "app.exe", DelaySeconds = 0 }],
+            SwitchCombo = new SwitchComboConfig { Buttons = ["B1"], HoldDurationSeconds = 3 }
+        };
+
+        await pm.LaunchProfileAsync(profile, CancellationToken.None);
+
+        Assert.AreEqual(1, launcher.Launched.Count);
+    }
+
+    [TestMethod]
+    public async Task LaunchProfileAsync_CommandWithNullDelay_LaunchesWithoutDelay()
+    {
+        var launcher = new StubProcessLauncher();
+        var pm = MakeManager(launcher);
+        var profile = new ProfileConfig
+        {
+            Name = "p1",
+            Commands = [new CommandConfig { Command = "app.exe", DelaySeconds = null }],
+            SwitchCombo = new SwitchComboConfig { Buttons = ["B1"], HoldDurationSeconds = 3 }
+        };
+
+        await pm.LaunchProfileAsync(profile, CancellationToken.None);
+
+        Assert.AreEqual(1, launcher.Launched.Count);
+    }
+
     // ── stubs ─────────────────────────────────────────────────────────────────
 
     private sealed class StubProcessLauncher : IProcessLauncher

@@ -106,7 +106,7 @@ public class ConfigurationLoaderTests
     // ── missing required fields ──────────────────────────────────────────────
 
     [TestMethod]
-    public void Load_MissingDefaultProfile_ThrowsInvalidOperationException()
+    public void Load_MissingDefaultProfile_ReturnsNullDefaultProfile()
     {
         var path = WriteTempJson("""
             {
@@ -120,7 +120,8 @@ public class ConfigurationLoaderTests
             }
             """);
 
-        Assert.ThrowsExactly<InvalidOperationException>(() => MakeLoader(path).Load());
+        var config = MakeLoader(path).Load();
+        Assert.IsNull(config.DefaultProfile);
     }
 
     [TestMethod]
@@ -312,6 +313,48 @@ public class ConfigurationLoaderTests
         Assert.IsNull(commands[0].WorkingDirectory);
         Assert.AreEqual("C:\\Other\\tool.exe", commands[1].Command);
         Assert.AreEqual("C:\\Other", commands[1].WorkingDirectory);
+    }
+
+    // ── delaySeconds ─────────────────────────────────────────────────────────
+
+    [TestMethod]
+    public void Load_CommandObjectWithDelaySeconds_DeserializesDelay()
+    {
+        var path = WriteTempJson("""
+            {
+              "defaultProfile": "app",
+              "profiles": [
+                {
+                  "name": "app",
+                  "commands": [{ "command": "server.exe", "delaySeconds": 5 }],
+                  "switchCombo": { "buttons": ["B1"], "holdDurationSeconds": 5 }
+                }
+              ]
+            }
+            """);
+
+        var config = MakeLoader(path).Load();
+        Assert.AreEqual(5, config.Profiles[0].Commands![0].DelaySeconds);
+    }
+
+    [TestMethod]
+    public void Load_CommandStringWithNoDelay_DeserializesNullDelay()
+    {
+        var path = WriteTempJson("""
+            {
+              "defaultProfile": "app",
+              "profiles": [
+                {
+                  "name": "app",
+                  "commands": ["app.exe"],
+                  "switchCombo": { "buttons": ["B1"], "holdDurationSeconds": 5 }
+                }
+              ]
+            }
+            """);
+
+        var config = MakeLoader(path).Load();
+        Assert.IsNull(config.Profiles[0].Commands![0].DelaySeconds);
     }
 
     // ── tolerance features ───────────────────────────────────────────────────
