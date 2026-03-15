@@ -5,7 +5,6 @@
 
   <ItemGroup Label="Service">
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.3" />
     <PackageVersion Include="Silk.NET.SDL" Version="2.23.0" />
   </ItemGroup>
 

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
-     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
   <Package Name="Arcade Cabinet App Switcher"
            Language="1033"
@@ -34,10 +33,10 @@
 
     <UI>
       <ProgressText Action="InstallFiles" Message="Installing application files..." />
-      <ProgressText Action="InstallServices" Message="Registering Windows service..." />
-      <ProgressText Action="StartServices" Message="Starting Windows service..." />
-      <ProgressText Action="StopServices" Message="Stopping Windows service..." />
-      <ProgressText Action="DeleteServices" Message="Removing Windows service..." />
+      <ProgressText Action="StopApplication" Message="Stopping running instance..." />
+      <ProgressText Action="CreateScheduledTask" Message="Registering scheduled task..." />
+      <ProgressText Action="StartScheduledTask" Message="Starting application..." />
+      <ProgressText Action="DeleteScheduledTask" Message="Removing scheduled task..." />
       <ProgressText Action="RemoveFiles" Message="Removing old files..." />
       <ProgressText Action="RemoveExistingProducts" Message="Removing previous version..." />
     </UI>
@@ -51,6 +50,76 @@
                  Sequence="ui"
                  Value="Configuration files:&#xA;  [INSTALLFOLDER]profiles.json&#xA;  [INSTALLFOLDER]appsettings.json&#xA;Log files:&#xA;  [CommonAppDataFolder]ArcadeCabinetSwitcher\logs\" />
 
+    <!--
+      Custom actions for Task Scheduler management.
+      Each SetProperty sets the CustomActionData (command line) for its paired deferred CA.
+      WixQuietExec runs the command from CustomActionData in an elevated, non-impersonated context.
+    -->
+
+    <!-- Stop any running instance before upgrade or uninstall (ignore failure — may not be running) -->
+    <SetProperty Id="StopApplication"
+                 Value="taskkill.exe /IM ArcadeCabinetSwitcher.exe /F"
+                 Before="StopApplication"
+                 Sequence="execute" />
+    <CustomAction Id="StopApplication"
+                  BinaryRef="Wix4UtilCA_X64"
+                  DllEntry="WixQuietExec"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+
+    <!--
+      Create scheduled task: logon trigger, runs as interactive user (S-1-5-4), restarts on failure.
+      [SystemFolder] expands to C:\Windows\System32\ in a 64-bit installer.
+      [INSTALLFOLDER] expands to the installation directory (includes trailing backslash).
+      PowerShell settings: RestartCount=3, RestartInterval=5s, always run on battery, hidden from UI.
+    -->
+    <SetProperty Id="CreateScheduledTask"
+                 Value="&quot;[SystemFolder]WindowsPowerShell\v1.0\powershell.exe&quot; -NonInteractive -ExecutionPolicy Bypass -Command &quot;$a=New-ScheduledTaskAction -Execute '[INSTALLFOLDER]ArcadeCabinetSwitcher.exe';$t=New-ScheduledTaskTrigger -AtLogOn;$s=New-ScheduledTaskSettingsSet -RestartCount 3 -RestartInterval (New-TimeSpan -Seconds 5) -DisallowStartIfOnBatteries:$false -Hidden;$p=New-ScheduledTaskPrincipal -GroupId S-1-5-4 -RunLevel Limited;Register-ScheduledTask ArcadeCabinetSwitcher -Action $a -Trigger $t -Settings $s -Principal $p -Force&quot;"
+                 Before="CreateScheduledTask"
+                 Sequence="execute" />
+    <CustomAction Id="CreateScheduledTask"
+                  BinaryRef="Wix4UtilCA_X64"
+                  DllEntry="WixQuietExec"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="check" />
+
+    <!-- Start the task immediately after installation (ignore failure — may require user session) -->
+    <SetProperty Id="StartScheduledTask"
+                 Value="schtasks.exe /Run /TN &quot;ArcadeCabinetSwitcher&quot;"
+                 Before="StartScheduledTask"
+                 Sequence="execute" />
+    <CustomAction Id="StartScheduledTask"
+                  BinaryRef="Wix4UtilCA_X64"
+                  DllEntry="WixQuietExec"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+
+    <!-- Delete scheduled task on uninstall (ignore failure — task may not exist) -->
+    <SetProperty Id="DeleteScheduledTask"
+                 Value="schtasks.exe /Delete /TN &quot;ArcadeCabinetSwitcher&quot; /F"
+                 Before="DeleteScheduledTask"
+                 Sequence="execute" />
+    <CustomAction Id="DeleteScheduledTask"
+                  BinaryRef="Wix4UtilCA_X64"
+                  DllEntry="WixQuietExec"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+
+    <InstallExecuteSequence>
+      <!-- Stop running instance before installing new files (upgrade) or removing (uninstall) -->
+      <Custom Action="StopApplication" Before="InstallFiles">REMOVE="ALL" OR WIX_UPGRADE_DETECTED</Custom>
+      <!-- Create task after files are in place, on install or upgrade -->
+      <Custom Action="CreateScheduledTask" After="InstallFiles">NOT REMOVE</Custom>
+      <!-- Start the task immediately; ignore failure if no interactive session is available -->
+      <Custom Action="StartScheduledTask" After="CreateScheduledTask">NOT REMOVE</Custom>
+      <!-- Delete task before removing files on full uninstall -->
+      <Custom Action="DeleteScheduledTask" Before="RemoveFiles">REMOVE="ALL"</Custom>
+    </InstallExecuteSequence>
+
   </Package>
 
   <Fragment>
@@ -62,32 +131,9 @@
   <Fragment>
     <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
 
-      <!--
-        Main executable with service registration and recovery policy (FR-4.3).
-        Recovery: restart after 1st and 2nd failure, reboot after 3rd, reset window = 1 day.
-      -->
+      <!-- Main executable -->
       <Component Id="MainExecutable">
         <File Source="$(PublishDir)ArcadeCabinetSwitcher.exe" KeyPath="yes" />
-        <ServiceInstall Id="ServiceInstall"
-                        Name="ArcadeCabinetSwitcher"
-                        DisplayName="Arcade Cabinet App Switcher"
-                        Description="Launches and switches profiles on an arcade cabinet."
-                        Start="auto"
-                        Type="ownProcess"
-                        Account="LocalSystem"
-                        ErrorControl="normal" />
-        <ServiceControl Id="ServiceControl"
-                        Name="ArcadeCabinetSwitcher"
-                        Start="install"
-                        Stop="both"
-                        Remove="uninstall"
-                        Wait="yes" />
-        <util:ServiceConfig ServiceName="ArcadeCabinetSwitcher"
-                            FirstFailureActionType="restart"
-                            SecondFailureActionType="restart"
-                            ThirdFailureActionType="reboot"
-                            RestartServiceDelayInSeconds="5"
-                            ResetPeriodInDays="1" />
       </Component>
 
       <!-- NeverOverwrite preserves user edits to appsettings.json across upgrades (FR-5.3) -->

@@ -1,6 +1,6 @@
 # Arcade Cabinet App Switcher
 
-A Windows Service that acts as an application launcher and switcher for a Windows-based arcade cabinet. It starts automatically on boot, launches a default profile, and lets users switch between profiles using joystick button combinations — no keyboard or mouse required.
+A startup application that acts as an application launcher and switcher for a Windows-based arcade cabinet. It starts automatically at user logon via Task Scheduler, launches a default profile, and lets users switch between profiles using joystick button combinations — no keyboard or mouse required.
 
 > **Status:** Early development. The core project scaffold is in place; full functionality is under active development. See [SPEC.md](SPEC.md) for the full functional specification.
 
@@ -11,7 +11,7 @@ A Windows Service that acts as an application launcher and switcher for a Window
 - **Joystick-driven switching** — Switch profiles by holding a configurable button combo for a set duration (e.g., 10 seconds)
 - **Clean process termination** — Tracks child/sub-processes to ensure everything is properly closed when switching profiles
 - **Special profiles** — Built-in support for reboot and shutdown profiles
-- **Reliable service** — Windows Service with recovery policy: restart on first/second failure, reboot on third
+- **Reliable** — Automatic restart on failure via Task Scheduler; starts automatically at user logon
 - **JSON configuration** — All profiles and combos are defined in a simple JSON settings file
 - **Windows Installer (MSI)** — Packaged for easy installation and upgrade
 - **Logging** — Service events, profile switches, and errors written to Windows Event Log and/or file
@@ -33,7 +33,7 @@ dotnet build
 # Run tests
 dotnet test
 
-# Run locally (console mode — UseWindowsService() degrades gracefully on non-Windows)
+# Run locally
 dotnet run --project src/ArcadeCabinetSwitcher
 ```
 
@@ -68,31 +68,11 @@ See [SPEC.md](SPEC.md) for the full configuration format and validation rules.
 Download the `.msi` from the [Releases](https://github.com/magnusakselvoll/arcade-cabinet-app-switcher/releases) page and run it. The installer:
 
 - Copies files to `C:\Program Files\ArcadeCabinetSwitcher\`
-- Registers the `ArcadeCabinetSwitcher` Windows service (auto-start, LocalSystem account)
-- Configures the service recovery policy automatically (see below)
+- Registers the `ArcadeCabinetSwitcher` Task Scheduler task (logon trigger, runs as the logged-in user)
+- Configures the restart policy automatically: restarts up to 3 times on failure (5-second delay)
 - Preserves existing `appsettings.json` and `profiles.json` when upgrading
 
-After installation, the service starts immediately. Edit `profiles.json` in the install directory to configure your profiles, then restart the service.
-
-## Service Configuration (Windows)
-
-### User Account (FR-4.2)
-
-By default, Windows services run as `LocalSystem`. To run as a specific user (e.g., the auto-login arcade account), run as Administrator:
-
-```cmd
-sc.exe config ArcadeCabinetSwitcher obj= "DOMAIN\username" password= "password"
-```
-
-### Recovery Policy (FR-4.3)
-
-The MSI installer configures the recovery policy automatically: restart on the first and second failure (5-second delay), reboot on the third failure within a 24-hour window.
-
-For manual installs, configure recovery with (run as Administrator):
-
-```cmd
-sc.exe failure ArcadeCabinetSwitcher reset= 86400 actions= restart/5000/restart/5000/reboot/5000
-```
+After installation, the application starts immediately. Edit `profiles.json` in the install directory to configure your profiles, then restart the task (`schtasks /End /TN ArcadeCabinetSwitcher` and `schtasks /Run /TN ArcadeCabinetSwitcher`).
 
 ## Logging
 
