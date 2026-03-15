@@ -48,7 +48,7 @@
     <SetProperty Id="WIXUI_EXITDIALOGOPTIONALTEXT"
                  Before="ExecuteAction"
                  Sequence="ui"
-                 Value="Configuration files:&#xA;  [INSTALLFOLDER]profiles.json&#xA;  [INSTALLFOLDER]appsettings.json&#xA;Log files:&#xA;  [CommonAppDataFolder]ArcadeCabinetSwitcher\logs\" />
+                 Value="Configuration files:&#xA;  [INSTALLFOLDER]profiles.json (default)&#xA;  %AppData%\ArcadeCabinetSwitcher\profiles.json (user override, takes priority)&#xA;  [INSTALLFOLDER]appsettings.json&#xA;Log files:&#xA;  [CommonAppDataFolder]ArcadeCabinetSwitcher\logs\" />
 
     <!--
       Custom actions for Task Scheduler management.

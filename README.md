@@ -39,7 +39,12 @@ dotnet run --project src/ArcadeCabinetSwitcher
 
 ## Configuration
 
-Profile configuration is stored in `profiles.json`, located in the same directory as the service executable. On first install the file is pre-populated with an example configuration that you can edit.
+Profile configuration is stored in `profiles.json`. The service checks two locations in order and uses the first file it finds:
+
+1. **`%AppData%\ArcadeCabinetSwitcher\profiles.json`** — user override; takes priority if present. No admin rights required to edit.
+2. **`<install directory>\profiles.json`** — default, placed there by the installer (typically `C:\Program Files\ArcadeCabinetSwitcher\`). Editing this location requires admin rights.
+
+On first install, the default `profiles.json` is pre-populated with example content. To configure without admin rights, copy the file to `%AppData%\ArcadeCabinetSwitcher\` and edit it there.
 
 Each profile specifies either the commands to run or a special action (`reboot`/`shutdown`), along with the joystick combo used to switch to it:
 
@@ -72,7 +77,7 @@ Download the `.msi` from the [Releases](https://github.com/magnusakselvoll/arcad
 - Configures the restart policy automatically: restarts up to 3 times on failure (5-second delay)
 - Preserves existing `appsettings.json` and `profiles.json` when upgrading
 
-After installation, the application starts immediately. Edit `profiles.json` in the install directory to configure your profiles, then restart the task (`schtasks /End /TN ArcadeCabinetSwitcher` and `schtasks /Run /TN ArcadeCabinetSwitcher`).
+After installation, the application starts immediately. Edit `profiles.json` (in `%AppData%\ArcadeCabinetSwitcher\` for a no-admin option, or in the install directory) to configure your profiles, then restart the task (`schtasks /End /TN ArcadeCabinetSwitcher` and `schtasks /Run /TN ArcadeCabinetSwitcher`).
 
 ## Logging
 

@@ -20,7 +20,7 @@ public sealed class ConfigurationLoader : IConfigurationLoader
     public ConfigurationLoader(ILogger<ConfigurationLoader> logger, string? configFilePath = null)
     {
         _logger = logger;
-        _configFilePath = configFilePath ?? Path.Combine(AppContext.BaseDirectory, "profiles.json");
+        _configFilePath = configFilePath ?? ConfigurationPaths.ResolveProfilesConfigPath();
     }
 
     public AppSwitcherConfig Load()
@@ -30,6 +30,8 @@ public sealed class ConfigurationLoader : IConfigurationLoader
             _logger.LogError(LogEvents.ConfigurationMissing, "Configuration file not found: {Path}", _configFilePath);
             throw new InvalidOperationException($"Configuration file not found: {_configFilePath}");
         }
+
+        _logger.LogInformation(LogEvents.ConfigurationPathResolved, "Loading configuration from: {Path}", _configFilePath);
 
         AppSwitcherConfig? config;
         try

@@ -65,7 +65,9 @@ The Arcade Cabinet App Switcher is a startup application managed by Task Schedul
 
 ### FR-1: Profiles and Configuration
 
-- **FR-1.1** The service reads its configuration from a JSON settings file at a known location
+- **FR-1.1** The service reads its configuration (`profiles.json`) from one of two locations, checked in order:
+  1. `%AppData%\ArcadeCabinetSwitcher\profiles.json` — user override; takes priority if the file exists
+  2. `<install directory>\profiles.json` — fallback default, placed there by the installer
 - **FR-1.2** The configuration may optionally specify a default profile that is launched at startup; if omitted, the application starts without launching any profile and waits for input
 - **FR-1.3** Each profile has:
   - A unique name (string identifier)
