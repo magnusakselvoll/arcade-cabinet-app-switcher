@@ -5,6 +5,10 @@
     <InstallerPlatform>x64</InstallerPlatform>
     <PublishDir Condition="'$(PublishDir)' == ''">..\..\publish\win-x64\</PublishDir>
     <DefineConstants>InstallerVersion=$(InstallerVersion);PublishDir=$(PublishDir)</DefineConstants>
+    <!-- Suppress expected ICE warnings:
+         ICE40: REINSTALLMODE in Property table (intentional: forces file replacement)
+         ICE61: AllowSameVersionUpgrades makes max version equal current (intentional: recovery from interrupted installs) -->
+    <SuppressIces>ICE40;ICE61</SuppressIces>
   </PropertyGroup>
 
   <ItemGroup>
