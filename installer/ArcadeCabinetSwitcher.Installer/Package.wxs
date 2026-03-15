@@ -30,6 +30,7 @@
 
     <!-- Minimal UI: welcome dialog, progress bar with step messages, and finish dialog -->
     <UIRef Id="WixUI_Minimal_$(sys.BUILDARCHSHORT)" />
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
 
     <UI>
       <ProgressText Action="InstallFiles" Message="Installing application files..." />
