@@ -29,7 +29,7 @@
     </Feature>
 
     <!-- Minimal UI: welcome dialog, progress bar with step messages, and finish dialog -->
-    <UIRef Id="WixUI_Minimal" />
+    <UIRef Id="WixUI_Minimal_$(sys.BUILDARCHSHORT)" />
 
     <UI>
       <ProgressText Action="InstallFiles" Message="Installing application files..." />
