@@ -100,6 +100,11 @@
         <File Source="$(PublishDir)profiles.json" KeyPath="yes" />
       </Component>
 
+      <!-- SDL2 native library required by Silk.NET for joystick input -->
+      <Component Id="Sdl2Native">
+        <File Source="$(PublishDir)SDL2.dll" KeyPath="yes" />
+      </Component>
+
     </ComponentGroup>
   </Fragment>
 
