@@ -61,6 +61,10 @@ internal sealed class InputHandler : IInputHandler
             {
                 // Shutdown timeout
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(LogEvents.UnexpectedException, ex, "Input polling task faulted");
+            }
         }
 
         _linkedCts?.Dispose();

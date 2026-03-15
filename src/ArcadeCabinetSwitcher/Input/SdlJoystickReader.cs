@@ -18,6 +18,53 @@ internal sealed class SdlJoystickReader : IJoystickReader
         try
         {
             _sdl = Sdl.GetApi();
+
+            // Headless hints — must be set before SDL_Init.
+            // Windows: spin up a dedicated joystick thread so no Win32 message pump is needed.
+            _sdl.SetHint(Sdl.HintJoystickThread, "1");
+            // Allow joystick events when the process has no foreground window.
+            _sdl.SetHint(Sdl.HintJoystickAllowBackgroundEvents, "1");
+            // macOS: disable the GameController (MFi) driver, which requires AppKit setup on the
+            // main thread. Arcade cabinet USB encoder boards are plain HID devices handled by
+            // SDL2's HIDAPI backend, which works headlessly on all platforms without SDL_INIT_VIDEO.
+            _sdl.SetHint("SDL_JOYSTICK_MFI", "0");
+
+            if (_sdl.Init(Sdl.InitJoystick) < 0)
+            {
+                _logger.LogWarning(LogEvents.JoystickNotFound,
+                    "SDL init failed: {Error}", _sdl.GetErrorS());
+                _sdl.Dispose();
+                _sdl = null;
+                return false;
+            }
+
+            int count = _sdl.NumJoysticks();
+            for (int i = 0; i < count; i++)
+            {
+                Joystick* joy = _sdl.JoystickOpen(i);
+                if (joy == null)
+                {
+                    _logger.LogWarning(LogEvents.InputError,
+                        "Failed to open joystick {Index}: {Error}", i, _sdl.GetErrorS());
+                    continue;
+                }
+
+                _joystickHandles.Add((nint)joy);
+                _logger.LogInformation(LogEvents.JoystickAcquired,
+                    "Acquired joystick {Index}: {Name} ({ButtonCount} buttons)",
+                    i, _sdl.JoystickNameS(joy), _sdl.JoystickNumButtons(joy));
+            }
+
+            if (_joystickHandles.Count == 0)
+            {
+                _logger.LogWarning(LogEvents.JoystickNotFound, "No joystick devices found");
+                _sdl.Quit();
+                _sdl.Dispose();
+                _sdl = null;
+                return false;
+            }
+
+            return true;
         }
         catch (Exception ex) when (ex is FileNotFoundException or DllNotFoundException)
         {
@@ -25,53 +72,6 @@ internal sealed class SdlJoystickReader : IJoystickReader
                 "SDL2 native library not found. Ensure SDL2.dll is present alongside the executable. Input monitoring disabled.");
             return false;
         }
-
-        // Headless hints — must be set before SDL_Init.
-        // Windows: spin up a dedicated joystick thread so no Win32 message pump is needed.
-        _sdl.SetHint(Sdl.HintJoystickThread, "1");
-        // Allow joystick events when the process has no foreground window.
-        _sdl.SetHint(Sdl.HintJoystickAllowBackgroundEvents, "1");
-        // macOS: disable the GameController (MFi) driver, which requires AppKit setup on the
-        // main thread. Arcade cabinet USB encoder boards are plain HID devices handled by
-        // SDL2's HIDAPI backend, which works headlessly on all platforms without SDL_INIT_VIDEO.
-        _sdl.SetHint("SDL_JOYSTICK_MFI", "0");
-
-        if (_sdl.Init(Sdl.InitJoystick) < 0)
-        {
-            _logger.LogWarning(LogEvents.JoystickNotFound,
-                "SDL init failed: {Error}", _sdl.GetErrorS());
-            _sdl.Dispose();
-            _sdl = null;
-            return false;
-        }
-
-        int count = _sdl.NumJoysticks();
-        for (int i = 0; i < count; i++)
-        {
-            Joystick* joy = _sdl.JoystickOpen(i);
-            if (joy == null)
-            {
-                _logger.LogWarning(LogEvents.InputError,
-                    "Failed to open joystick {Index}: {Error}", i, _sdl.GetErrorS());
-                continue;
-            }
-
-            _joystickHandles.Add((nint)joy);
-            _logger.LogInformation(LogEvents.JoystickAcquired,
-                "Acquired joystick {Index}: {Name} ({ButtonCount} buttons)",
-                i, _sdl.JoystickNameS(joy), _sdl.JoystickNumButtons(joy));
-        }
-
-        if (_joystickHandles.Count == 0)
-        {
-            _logger.LogWarning(LogEvents.JoystickNotFound, "No joystick devices found");
-            _sdl.Quit();
-            _sdl.Dispose();
-            _sdl = null;
-            return false;
-        }
-
-        return true;
     }
 
     public unsafe IReadOnlySet<string> GetPressedButtons()
