@@ -4,7 +4,7 @@ This document describes how the arcade cabinet app switcher should work. It serv
 
 ## Overview
 
-The Arcade Cabinet App Switcher is a Windows service that acts as an application launcher and switcher for a Windows-based arcade cabinet. When the machine powers on, Windows auto-logs in and the service starts automatically, launching the default profile. Users can switch between profiles using joystick button combinations on the arcade controls, without needing a keyboard or mouse.
+The Arcade Cabinet App Switcher is a startup application managed by Task Scheduler that acts as an application launcher and switcher for a Windows-based arcade cabinet. When the machine powers on, Windows auto-logs in and the application starts automatically, launching the default profile. Users can switch between profiles using joystick button combinations on the arcade controls, without needing a keyboard or mouse.
 
 ## Terminology
 
@@ -15,17 +15,17 @@ The Arcade Cabinet App Switcher is a Windows service that acts as an application
 | **Switch combo** | A configurable combination of joystick buttons that, when held for a configured duration, triggers a switch to a specific profile |
 | **Hold duration** | The number of seconds a switch combo must be held before the switch is triggered |
 | **Active profile** | The profile whose processes are currently running |
-| **Service** | The Windows Service that hosts the app switcher logic and runs in user context |
+| **Application** | The startup application managed by Task Scheduler that hosts the app switcher logic and runs in the logged-in user's session |
 
 ## Use Cases
 
 ### UC-1: System Startup
 
 1. The Windows machine powers on and automatically logs in to a configured user account
-2. The Windows Service starts in that user's context
-3. The service loads the configuration file
-4. The service launches the default profile's commands
-5. The service begins monitoring for joystick input
+2. Task Scheduler starts the application in the logged-in user's context
+3. The application loads the configuration file
+4. The application launches the default profile's commands
+5. The application begins monitoring for joystick input
 
 ### UC-2: Profile Switching
 
@@ -55,12 +55,11 @@ The Arcade Cabinet App Switcher is a Windows service that acts as an application
 4. Any processes that have not exited are forcefully terminated
 5. The service confirms all processes are stopped before proceeding
 
-### UC-6: Service Recovery
+### UC-6: Application Recovery
 
-1. The service fails or crashes
-2. Windows Service recovery policy restarts the service automatically (first and second failures)
-3. On the third failure, the recovery policy reboots the machine
-4. After each restart, the service resumes normal operation including launching the default profile
+1. The application fails or crashes
+2. Task Scheduler restart policy restarts the application automatically (up to 3 times, 5-second delay)
+3. After each restart, the application resumes normal operation including launching the default profile
 
 ## Functional Requirements
 
@@ -91,20 +90,20 @@ The Arcade Cabinet App Switcher is a Windows service that acts as an application
 - **FR-3.4** Termination is attempted gracefully first (e.g., WM_CLOSE or equivalent); processes not exiting within a short timeout are forcefully killed
 - **FR-3.5** The service waits for all processes to exit before launching the next profile
 
-### FR-4: Windows Service
+### FR-4: Startup and Recovery
 
-- **FR-4.1** The app switcher runs as a Windows Service
-- **FR-4.2** The service runs in the logged-in user's context (not as SYSTEM or a dedicated service account) so that launched processes have access to the user's desktop session and environment
-- **FR-4.3** The service is configured with a recovery policy:
-  - First failure: restart the service
-  - Second failure: restart the service
-  - Third failure: reboot the machine
-- **FR-4.4** The service starts automatically when Windows starts (after auto-login)
+- **FR-4.1** The app switcher runs as a startup application managed by Task Scheduler
+- **FR-4.2** The application runs in the logged-in user's interactive session so that launched processes have access to the user's desktop and environment
+- **FR-4.3** The application is configured with a restart policy via Task Scheduler:
+  - First failure: restart the application (5-second delay)
+  - Second and third failure: restart the application (5-second delay)
+  - Note: Task Scheduler does not support reboot-on-failure; automatic machine reboot on repeated failure is not supported
+- **FR-4.4** The application starts automatically at user logon via Task Scheduler
 
 ### FR-5: Installation
 
 - **FR-5.1** The service is distributed as a Windows Installer package (MSI)
-- **FR-5.2** The installer registers the service with Windows and configures the recovery policy
+- **FR-5.2** The installer registers a scheduled task with Windows and configures the restart policy
 - **FR-5.3** The installer places the configuration file at the expected location with default/example content if no configuration exists
 - **FR-5.4** The installer supports upgrading an existing installation without requiring manual uninstallation
 - **FR-5.5** The installer recovers gracefully from interrupted installations — re-running the same version overwrites the previous installation regardless of its state
@@ -179,7 +178,7 @@ The configuration is stored as a JSON file. The following is an example showing 
 
 ## Non-Functional Requirements
 
-- **Reliability**: The service must be stable under continuous operation. The Windows Service recovery policy acts as a safety net, but crashes should be minimised through robust error handling.
+- **Reliability**: The application must be stable under continuous operation. The Task Scheduler restart policy acts as a safety net, but crashes should be minimised through robust error handling.
 - **Platform**: Windows only. No cross-platform support is required or planned.
 - **User context**: All launched applications must run in the interactive user session, not as background or system-level processes.
 - **Low resource usage**: The service should have minimal CPU and memory overhead when idle (waiting for input or running a profile).

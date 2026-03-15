@@ -11,10 +11,6 @@ var programData = Environment.GetEnvironmentVariable("ProgramData")
 var logPath = Path.Combine(programData, "ArcadeCabinetSwitcher", "logs", "arcade-cabinet-switcher.log");
 
 var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddWindowsService(options =>
-{
-    options.ServiceName = "ArcadeCabinetSwitcher";
-});
 builder.Services.AddSingleton<IConfigurationLoader, ConfigurationLoader>();
 builder.Services.AddSingleton<IProcessLauncher, SystemProcessLauncher>();
 builder.Services.AddSingleton<IProcessManager, ProcessManager>();
