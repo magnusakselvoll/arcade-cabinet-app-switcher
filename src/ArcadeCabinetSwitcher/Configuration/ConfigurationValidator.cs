@@ -26,11 +26,7 @@ internal static class ConfigurationValidator
             }
         }
 
-        if (string.IsNullOrWhiteSpace(config.DefaultProfile))
-        {
-            errors.Add("DefaultProfile must not be empty.");
-        }
-        else if (!profileNames.Contains(config.DefaultProfile))
+        if (!string.IsNullOrWhiteSpace(config.DefaultProfile) && !profileNames.Contains(config.DefaultProfile))
         {
             errors.Add($"DefaultProfile '{config.DefaultProfile}' does not match any profile name.");
         }
@@ -64,6 +60,12 @@ internal static class ConfigurationValidator
                     if (cmd.WorkingDirectory is not null && string.IsNullOrWhiteSpace(cmd.WorkingDirectory))
                     {
                         errors.Add($"Profile '{profile.Name}': Command workingDirectory must not be blank.");
+                        break;
+                    }
+
+                    if (cmd.DelaySeconds is < 0)
+                    {
+                        errors.Add($"Profile '{profile.Name}': Command delaySeconds must be >= 0.");
                         break;
                     }
                 }

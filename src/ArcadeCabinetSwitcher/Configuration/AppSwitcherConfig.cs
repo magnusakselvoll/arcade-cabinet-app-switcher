@@ -7,7 +7,7 @@ namespace ArcadeCabinetSwitcher.Configuration;
 /// </summary>
 public sealed class AppSwitcherConfig
 {
-    public required string DefaultProfile { get; init; }
+    public string? DefaultProfile { get; init; }
     public required IReadOnlyList<ProfileConfig> Profiles { get; init; }
 }
 
@@ -47,6 +47,7 @@ public sealed class CommandConfig
 {
     public required string Command { get; init; }
     public string? WorkingDirectory { get; init; }
+    public int? DelaySeconds { get; init; }
 }
 
 /// <summary>

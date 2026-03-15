@@ -20,13 +20,16 @@ internal sealed class ProcessManager : IProcessManager
         _gracefulExitTimeout = gracefulExitTimeout;
     }
 
-    public Task LaunchProfileAsync(ProfileConfig profile, CancellationToken cancellationToken)
+    public async Task LaunchProfileAsync(ProfileConfig profile, CancellationToken cancellationToken)
     {
         if (profile.Commands is null || profile.Commands.Count == 0)
-            return Task.CompletedTask;
+            return;
 
         foreach (var commandConfig in profile.Commands)
         {
+            if (commandConfig.DelaySeconds is > 0)
+                await Task.Delay(TimeSpan.FromSeconds(commandConfig.DelaySeconds.Value), cancellationToken);
+
             try
             {
                 var (fileName, arguments) = CommandParser.Parse(commandConfig.Command);
@@ -52,8 +55,6 @@ internal sealed class ProcessManager : IProcessManager
         _logger.LogInformation(LogEvents.ProfileLaunched,
             "Launched profile {ProfileName} with {CommandCount} command(s)",
             profile.Name, profile.Commands.Count);
-
-        return Task.CompletedTask;
     }
 
     public async Task TerminateActiveProfileAsync(CancellationToken cancellationToken)

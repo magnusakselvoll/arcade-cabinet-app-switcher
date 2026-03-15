@@ -25,20 +25,28 @@ public class Worker(
 
         await inputHandler.StartAsync(config, stoppingToken);
 
-        var defaultProfile = config.Profiles.FirstOrDefault(p =>
-            string.Equals(p.Name, config.DefaultProfile, StringComparison.OrdinalIgnoreCase));
-
-        if (defaultProfile is not null)
+        if (string.IsNullOrWhiteSpace(config.DefaultProfile))
         {
-            logger.LogInformation(LogEvents.DefaultProfileLaunched,
-                "Launching default profile: {ProfileName}", defaultProfile.Name);
-            await processManager.LaunchProfileAsync(defaultProfile, stoppingToken);
-            _activeProfileName = defaultProfile.Name;
+            logger.LogInformation(LogEvents.NoDefaultProfile,
+                "No default profile configured; waiting for input");
         }
         else
         {
-            logger.LogWarning(LogEvents.ProfileSwitchFailed,
-                "Default profile '{ProfileName}' not found in configuration", config.DefaultProfile);
+            var defaultProfile = config.Profiles.FirstOrDefault(p =>
+                string.Equals(p.Name, config.DefaultProfile, StringComparison.OrdinalIgnoreCase));
+
+            if (defaultProfile is not null)
+            {
+                logger.LogInformation(LogEvents.DefaultProfileLaunched,
+                    "Launching default profile: {ProfileName}", defaultProfile.Name);
+                await processManager.LaunchProfileAsync(defaultProfile, stoppingToken);
+                _activeProfileName = defaultProfile.Name;
+            }
+            else
+            {
+                logger.LogWarning(LogEvents.ProfileSwitchFailed,
+                    "Default profile '{ProfileName}' not found in configuration", config.DefaultProfile);
+            }
         }
 
         await Task.Delay(Timeout.Infinite, stoppingToken);
