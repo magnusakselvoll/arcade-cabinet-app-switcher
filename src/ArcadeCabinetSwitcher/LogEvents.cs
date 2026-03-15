@@ -17,6 +17,7 @@ public static class LogEvents
     // Service lifecycle
     public static readonly EventId ServiceStarting = new(1000, nameof(ServiceStarting));
     public static readonly EventId ServiceStopping = new(1001, nameof(ServiceStopping));
+    public static readonly EventId ApplicationTerminated = new(1002, nameof(ApplicationTerminated));
 
     // Configuration
     public static readonly EventId ConfigurationLoaded = new(2000, nameof(ConfigurationLoaded));

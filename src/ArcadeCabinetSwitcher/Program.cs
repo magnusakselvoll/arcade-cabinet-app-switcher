@@ -31,4 +31,16 @@ builder.Services.AddSerilog((_, lc) =>
           restrictedToMinimumLevel: LogEventLevel.Verbose));
 
 var host = builder.Build();
-host.Run();
+
+try
+{
+    host.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
