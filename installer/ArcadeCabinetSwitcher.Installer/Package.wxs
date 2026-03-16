@@ -111,13 +111,13 @@
 
     <InstallExecuteSequence>
       <!-- Stop running instance before installing new files (upgrade) or removing (uninstall) -->
-      <Custom Action="StopApplication" Before="InstallFiles">REMOVE="ALL" OR WIX_UPGRADE_DETECTED</Custom>
+      <Custom Action="StopApplication" Before="InstallFiles" Condition="REMOVE=&quot;ALL&quot; OR WIX_UPGRADE_DETECTED" />
       <!-- Create task after files are in place, on install or upgrade -->
-      <Custom Action="CreateScheduledTask" After="InstallFiles">NOT REMOVE</Custom>
+      <Custom Action="CreateScheduledTask" After="InstallFiles" Condition="NOT REMOVE" />
       <!-- Start the task immediately; ignore failure if no interactive session is available -->
-      <Custom Action="StartScheduledTask" After="CreateScheduledTask">NOT REMOVE</Custom>
+      <Custom Action="StartScheduledTask" After="CreateScheduledTask" Condition="NOT REMOVE" />
       <!-- Delete task before removing files on full uninstall -->
-      <Custom Action="DeleteScheduledTask" Before="RemoveFiles">REMOVE="ALL"</Custom>
+      <Custom Action="DeleteScheduledTask" Before="RemoveFiles" Condition="REMOVE=&quot;ALL&quot;" />
     </InstallExecuteSequence>
 
   </Package>
