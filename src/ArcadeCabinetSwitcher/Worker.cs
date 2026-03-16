@@ -1,6 +1,7 @@
 using ArcadeCabinetSwitcher.Configuration;
 using ArcadeCabinetSwitcher.Input;
 using ArcadeCabinetSwitcher.ProcessManagement;
+using ArcadeCabinetSwitcher.UI;
 
 namespace ArcadeCabinetSwitcher;
 
@@ -9,7 +10,8 @@ public class Worker(
     IConfigurationLoader configurationLoader,
     IInputHandler inputHandler,
     IProcessManager processManager,
-    ISystemActionHandler systemActionHandler) : BackgroundService
+    ISystemActionHandler systemActionHandler,
+    IOverlayService overlayService) : BackgroundService
 {
     private string? _activeProfileName;
     private int _switching; // 0 = idle, 1 = in progress
@@ -20,7 +22,12 @@ public class Worker(
 
         var config = configurationLoader.Load();
 
+        overlayService.SetAvailableProfiles(config.Profiles.Select(p => p.Name).ToList());
+
         inputHandler.ProfileSwitchRequested += (_, profileName) =>
+            OnProfileSwitchRequested(profileName, config, stoppingToken);
+
+        overlayService.ProfileSwitchRequested += (_, profileName) =>
             OnProfileSwitchRequested(profileName, config, stoppingToken);
 
         await inputHandler.StartAsync(config, stoppingToken);
@@ -41,6 +48,8 @@ public class Worker(
                     "Launching default profile: {ProfileName}", defaultProfile.Name);
                 await processManager.LaunchProfileAsync(defaultProfile, stoppingToken);
                 _activeProfileName = defaultProfile.Name;
+                overlayService.ShowProfileNotification(defaultProfile.Name);
+                overlayService.UpdateActiveProfile(defaultProfile.Name);
             }
             else
             {
@@ -96,6 +105,8 @@ public class Worker(
             }
 
             _activeProfileName = target.Name;
+            overlayService.ShowProfileNotification(target.Name);
+            overlayService.UpdateActiveProfile(target.Name);
 
             logger.LogInformation(LogEvents.ProfileSwitchCompleted,
                 "Profile switch to '{ProfileName}' completed", profileName);

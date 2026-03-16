@@ -56,6 +56,11 @@ public static class LogEvents
     public static readonly EventId ButtonDiscoveryLogged = new(5009, nameof(ButtonDiscoveryLogged));
     public static readonly EventId SdlLibraryNotFound = new(5010, nameof(SdlLibraryNotFound));
 
+    // UI (overlay / tray)
+    public static readonly EventId OverlayShown = new(6000, nameof(OverlayShown));
+    public static readonly EventId TrayIconInitialized = new(6001, nameof(TrayIconInitialized));
+    public static readonly EventId ExitRequestedFromTray = new(6002, nameof(ExitRequestedFromTray));
+
     // Errors
     public static readonly EventId UnexpectedException = new(9000, nameof(UnexpectedException));
 }
