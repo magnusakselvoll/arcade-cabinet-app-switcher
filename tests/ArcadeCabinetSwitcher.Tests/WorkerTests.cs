@@ -1,6 +1,7 @@
 using ArcadeCabinetSwitcher.Configuration;
 using ArcadeCabinetSwitcher.Input;
 using ArcadeCabinetSwitcher.ProcessManagement;
+using ArcadeCabinetSwitcher.UI;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -38,7 +39,8 @@ public class WorkerTests
             new StubConfigurationLoader(config),
             inputHandler,
             processManager,
-            systemActionHandler);
+            systemActionHandler,
+            new NullOverlayService());
     }
 
     // ── startup ───────────────────────────────────────────────────────────────
@@ -188,7 +190,8 @@ public class WorkerTests
             new StubConfigurationLoader(config),
             ih,
             blockingPm,
-            new SpySystemActionHandler());
+            new SpySystemActionHandler(),
+            new NullOverlayService());
 
         using var cts = new CancellationTokenSource();
         await worker.StartAsync(cts.Token);
@@ -310,6 +313,15 @@ public class WorkerTests
             _executedActions.Add(action);
             return Task.CompletedTask;
         }
+    }
+
+    private sealed class NullOverlayService : IOverlayService
+    {
+        public void ShowProfileNotification(string profileName) { }
+        public void UpdateActiveProfile(string profileName) { }
+        public void SetAvailableProfiles(IReadOnlyList<string> profileNames) { }
+        public event EventHandler<string>? ProfileSwitchRequested { add { } remove { } }
+        public event EventHandler? ExitRequested { add { } remove { } }
     }
 
     /// <summary>
