@@ -71,5 +71,6 @@ catch (Exception ex)
 finally
 {
     await host.StopAsync();
+    host.Dispose();          // disposes DI container → SdlJoystickReader.Dispose() → SDL_Quit()
     Log.CloseAndFlush();
 }
