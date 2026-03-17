@@ -139,32 +139,32 @@
       -->
 
       <!-- Main executable -->
-      <Component Id="MainExecutable">
+      <Component Id="MainExecutable" Guid="{1C6DC335-C5FA-4A78-86F5-B87FD2E61514}">
         <RegistryValue Root="HKCU" Key="Software\ArcadeCabinetSwitcher" Name="MainExecutable" Type="integer" Value="1" KeyPath="yes" />
         <File Source="$(PublishDir)ArcadeCabinetSwitcher.exe" />
         <RemoveFolder Id="RemoveINSTALLFOLDER" On="uninstall" />
       </Component>
 
       <!-- NeverOverwrite preserves user edits to appsettings.json across upgrades (FR-5.3) -->
-      <Component Id="AppSettings" NeverOverwrite="yes">
+      <Component Id="AppSettings" NeverOverwrite="yes" Guid="{E7A66B08-7460-44A3-B6EC-3CC4CE35BBB8}">
         <RegistryValue Root="HKCU" Key="Software\ArcadeCabinetSwitcher" Name="AppSettings" Type="integer" Value="1" KeyPath="yes" />
         <File Source="$(PublishDir)appsettings.json" />
       </Component>
 
       <!-- NeverOverwrite preserves user-configured profiles.json across upgrades (FR-5.3) -->
-      <Component Id="ProfilesConfig" NeverOverwrite="yes">
+      <Component Id="ProfilesConfig" NeverOverwrite="yes" Guid="{984456B4-78F8-4BCB-8DDD-F17C3F0341FC}">
         <RegistryValue Root="HKCU" Key="Software\ArcadeCabinetSwitcher" Name="ProfilesConfig" Type="integer" Value="1" KeyPath="yes" />
         <File Source="$(PublishDir)profiles.json" />
       </Component>
 
       <!-- SDL2 native library required by Silk.NET for joystick input -->
-      <Component Id="Sdl2Native">
+      <Component Id="Sdl2Native" Guid="{A592EF0C-3A35-4BBC-BF2D-DE956CCCC207}">
         <RegistryValue Root="HKCU" Key="Software\ArcadeCabinetSwitcher" Name="Sdl2Native" Type="integer" Value="1" KeyPath="yes" />
         <File Source="$(PublishDir)SDL2.dll" />
       </Component>
 
       <!-- PowerShell script invoked by CreateScheduledTask custom action (logic extracted to stay within ICE03 255-char limit) -->
-      <Component Id="ScheduledTaskScript">
+      <Component Id="ScheduledTaskScript" Guid="{18B8F2FC-ECB0-4532-A4EF-F3BBEE4FE3B7}">
         <RegistryValue Root="HKCU" Key="Software\ArcadeCabinetSwitcher" Name="ScheduledTaskScript" Type="integer" Value="1" KeyPath="yes" />
         <File Source="Create-ScheduledTask.ps1" />
       </Component>
