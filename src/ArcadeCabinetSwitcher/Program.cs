@@ -11,9 +11,8 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Settings.Configuration;
 
-var programData = Environment.GetEnvironmentVariable("ProgramData")
-    ?? Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-var logPath = Path.Combine(programData, "ArcadeCabinetSwitcher", "logs", "arcade-cabinet-switcher.log");
+var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+var logPath = Path.Combine(localAppData, "ArcadeCabinetSwitcher", "logs", "arcade-cabinet-switcher.log");
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddSingleton<IOverlayService, AvaloniaOverlayService>();

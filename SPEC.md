@@ -110,6 +110,7 @@ The Arcade Cabinet App Switcher is a startup application managed by Task Schedul
 - **FR-5.4** The installer supports upgrading an existing installation without requiring manual uninstallation
 - **FR-5.5** The installer recovers gracefully from interrupted installations — re-running the same version overwrites the previous installation regardless of its state
 - **FR-5.6** The installer displays the locations of configuration files and log files in the finish dialog so operators know where to find them after installation
+- **FR-5.7** The installer uses per-user scope — it installs to `%LocalAppData%\ArcadeCabinetSwitcher\` and does not require administrator privileges or a UAC prompt
 
 ### FR-6: Updates
 

@@ -7,8 +7,9 @@
     <DefineConstants>InstallerVersion=$(InstallerVersion);PublishDir=$(PublishDir)</DefineConstants>
     <!-- Suppress expected ICE warnings:
          ICE40: REINSTALLMODE in Property table (intentional: forces file replacement)
-         ICE61: AllowSameVersionUpgrades makes max version equal current (intentional: recovery from interrupted installs) -->
-    <SuppressIces>ICE40;ICE61</SuppressIces>
+         ICE61: AllowSameVersionUpgrades makes max version equal current (intentional: recovery from interrupted installs)
+         ICE91: per-user install directory under LocalAppData (intentional: per-user MSI) -->
+    <SuppressIces>ICE40;ICE61;ICE91</SuppressIces>
   </PropertyGroup>
 
   <ItemGroup>

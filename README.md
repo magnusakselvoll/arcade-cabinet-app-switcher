@@ -42,9 +42,9 @@ dotnet run --project src/ArcadeCabinetSwitcher
 Profile configuration is stored in `profiles.json`. The service checks two locations in order and uses the first file it finds:
 
 1. **`%AppData%\ArcadeCabinetSwitcher\profiles.json`** — user override; takes priority if present. No admin rights required to edit.
-2. **`<install directory>\profiles.json`** — default, placed there by the installer (typically `C:\Program Files\ArcadeCabinetSwitcher\`). Editing this location requires admin rights.
+2. **`<install directory>\profiles.json`** — default, placed there by the installer (typically `%LocalAppData%\ArcadeCabinetSwitcher\`). This location is user-writable, so no admin rights are required to edit it.
 
-On first install, the default `profiles.json` is pre-populated with example content. To configure without admin rights, copy the file to `%AppData%\ArcadeCabinetSwitcher\` and edit it there.
+On first install, the default `profiles.json` is pre-populated with example content. You can edit it directly in the install directory, or copy it to `%AppData%\ArcadeCabinetSwitcher\` if you prefer to keep your config separate from the install directory.
 
 Each profile specifies either the commands to run or a special action (`reboot`/`shutdown`), along with the joystick combo used to switch to it:
 
@@ -70,12 +70,14 @@ See [SPEC.md](SPEC.md) for the full configuration format and validation rules.
 
 ## Installation (Windows)
 
-Download the `.msi` from the [Releases](https://github.com/magnusakselvoll/arcade-cabinet-app-switcher/releases) page and run it. The installer:
+Download the `.msi` from the [Releases](https://github.com/magnusakselvoll/arcade-cabinet-app-switcher/releases) page and run it. **No admin rights required** — the installer runs without a UAC prompt. The installer:
 
-- Copies files to `C:\Program Files\ArcadeCabinetSwitcher\`
-- Registers the `ArcadeCabinetSwitcher` Task Scheduler task (logon trigger, runs as the logged-in user)
+- Copies files to `%LocalAppData%\ArcadeCabinetSwitcher\`
+- Registers the `ArcadeCabinetSwitcher` Task Scheduler task for the current user (logon trigger)
 - Configures the restart policy automatically: restarts up to 3 times on failure (5-second delay)
 - Preserves existing `appsettings.json` and `profiles.json` when upgrading
+
+> **Upgrading from an older per-machine version?** If you previously installed a version that used `C:\Program Files\ArcadeCabinetSwitcher\`, uninstall it first (via Programs & Features or `msiexec /x`). The new per-user installer uses a different install scope and cannot auto-upgrade the old version.
 
 After installation, the application starts immediately. Edit `profiles.json` (in `%AppData%\ArcadeCabinetSwitcher\` for a no-admin option, or in the install directory) to configure your profiles, then restart the task (`schtasks /End /TN ArcadeCabinetSwitcher` and `schtasks /Run /TN ArcadeCabinetSwitcher`).
 
@@ -84,7 +86,7 @@ After installation, the application starts immediately. Edit `profiles.json` (in
 By default, events are written to the **console** and to a **rolling daily log file** at:
 
 ```
-C:\ProgramData\ArcadeCabinetSwitcher\logs\arcade-cabinet-switcher.log
+%LocalAppData%\ArcadeCabinetSwitcher\logs\arcade-cabinet-switcher.log
 ```
 
 The directory is created automatically on first run.
