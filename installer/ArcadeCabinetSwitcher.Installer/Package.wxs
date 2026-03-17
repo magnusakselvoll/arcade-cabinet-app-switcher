@@ -157,10 +157,28 @@
         <File Source="$(PublishDir)profiles.json" />
       </Component>
 
+      <!--
+        Native libraries required at runtime. When adding a new NuGet dependency that ships native
+        binaries, check the win-x64 publish output and add any new *.dll files here, otherwise the
+        MSI will install an incomplete package that crashes on startup with DllNotFoundException.
+      -->
+
       <!-- SDL2 native library required by Silk.NET for joystick input -->
       <Component Id="Sdl2Native" Guid="{A592EF0C-3A35-4BBC-BF2D-DE956CCCC207}">
         <RegistryValue Root="HKCU" Key="Software\ArcadeCabinetSwitcher" Name="Sdl2Native" Type="integer" Value="1" KeyPath="yes" />
         <File Source="$(PublishDir)SDL2.dll" />
+      </Component>
+
+      <!-- SkiaSharp native library required by Avalonia rendering backend -->
+      <Component Id="SkiaSharpNative" Guid="{C3D4E5F6-A7B8-4901-BCDE-F01234567890}">
+        <RegistryValue Root="HKCU" Key="Software\ArcadeCabinetSwitcher" Name="SkiaSharpNative" Type="integer" Value="1" KeyPath="yes" />
+        <File Source="$(PublishDir)libSkiaSharp.dll" />
+      </Component>
+
+      <!-- HarfBuzzSharp native library required by Avalonia text rendering -->
+      <Component Id="HarfBuzzSharpNative" Guid="{D4E5F6A7-B8C9-4012-CDEF-012345678901}">
+        <RegistryValue Root="HKCU" Key="Software\ArcadeCabinetSwitcher" Name="HarfBuzzSharpNative" Type="integer" Value="1" KeyPath="yes" />
+        <File Source="$(PublishDir)libHarfBuzzSharp.dll" />
       </Component>
 
       <!-- PowerShell script invoked by CreateScheduledTask custom action (logic extracted to stay within ICE03 255-char limit) -->
