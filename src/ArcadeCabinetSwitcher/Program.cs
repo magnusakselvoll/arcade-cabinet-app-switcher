@@ -70,6 +70,7 @@ catch (Exception ex)
 }
 finally
 {
+    SynchronizationContext.SetSynchronizationContext(null);  // clear dead Avalonia dispatcher to prevent await deadlock
     await host.StopAsync();
     host.Dispose();          // disposes DI container → SdlJoystickReader.Dispose() → SDL_Quit()
     Log.CloseAndFlush();
