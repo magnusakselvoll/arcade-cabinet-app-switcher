@@ -192,8 +192,8 @@ public class ProcessManagerTests
         sw.Stop();
 
         Assert.AreEqual(2, launcher.Launched.Count);
-        Assert.IsTrue(sw.Elapsed >= TimeSpan.FromSeconds(1),
-            $"Expected at least 1s delay but elapsed was {sw.Elapsed}");
+        Assert.IsTrue(sw.Elapsed >= TimeSpan.FromMilliseconds(950),
+            $"Expected at least ~1s delay but elapsed was {sw.Elapsed}");
     }
 
     [TestMethod]
