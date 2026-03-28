@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using ArcadeCabinetSwitcher.Configuration;
 
 namespace ArcadeCabinetSwitcher.ProcessManagement;
@@ -34,7 +35,8 @@ internal sealed class ProcessManager : IProcessManager
             {
                 var (fileName, arguments) = CommandParser.Parse(commandConfig.Command);
                 var workingDirectory = commandConfig.WorkingDirectory ?? Path.GetDirectoryName(fileName) ?? string.Empty;
-                var handle = _processLauncher.Start(fileName, arguments, workingDirectory);
+                var windowStyle = ParseWindowStyle(commandConfig.WindowStyle);
+                var handle = _processLauncher.Start(fileName, arguments, workingDirectory, windowStyle);
 
                 lock (_lock)
                 {
@@ -133,4 +135,15 @@ internal sealed class ProcessManager : IProcessManager
 
         _logger.LogInformation(LogEvents.ProfileTerminationCompleted, "Profile termination completed");
     }
+
+    private static ProcessWindowStyle? ParseWindowStyle(string? value) =>
+        value?.ToLowerInvariant() switch
+        {
+            null => null,
+            "normal" => ProcessWindowStyle.Normal,
+            "hidden" => ProcessWindowStyle.Hidden,
+            "minimized" => ProcessWindowStyle.Minimized,
+            "maximized" => ProcessWindowStyle.Maximized,
+            _ => null
+        };
 }

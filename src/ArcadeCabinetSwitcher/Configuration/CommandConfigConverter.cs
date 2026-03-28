@@ -24,6 +24,7 @@ internal sealed class CommandConfigConverter : JsonConverter<CommandConfig>
         string? command2 = null;
         string? workingDirectory = null;
         int? delaySeconds = null;
+        string? windowStyle = null;
 
         while (reader.Read())
         {
@@ -42,6 +43,8 @@ internal sealed class CommandConfigConverter : JsonConverter<CommandConfig>
                 workingDirectory = reader.GetString();
             else if (propertyName.Equals("delaySeconds", StringComparison.OrdinalIgnoreCase))
                 delaySeconds = reader.GetInt32();
+            else if (propertyName.Equals("windowStyle", StringComparison.OrdinalIgnoreCase))
+                windowStyle = reader.GetString();
             else
                 reader.Skip();
         }
@@ -49,12 +52,12 @@ internal sealed class CommandConfigConverter : JsonConverter<CommandConfig>
         if (command2 is null)
             throw new JsonException("CommandConfig object must include a 'command' property.");
 
-        return new CommandConfig { Command = command2, WorkingDirectory = workingDirectory, DelaySeconds = delaySeconds };
+        return new CommandConfig { Command = command2, WorkingDirectory = workingDirectory, DelaySeconds = delaySeconds, WindowStyle = windowStyle };
     }
 
     public override void Write(Utf8JsonWriter writer, CommandConfig value, JsonSerializerOptions options)
     {
-        if (value.WorkingDirectory is null && value.DelaySeconds is null)
+        if (value.WorkingDirectory is null && value.DelaySeconds is null && value.WindowStyle is null)
         {
             writer.WriteStringValue(value.Command);
         }
@@ -66,6 +69,8 @@ internal sealed class CommandConfigConverter : JsonConverter<CommandConfig>
                 writer.WriteString("workingDirectory", value.WorkingDirectory);
             if (value.DelaySeconds is not null)
                 writer.WriteNumber("delaySeconds", value.DelaySeconds.Value);
+            if (value.WindowStyle is not null)
+                writer.WriteString("windowStyle", value.WindowStyle);
             writer.WriteEndObject();
         }
     }

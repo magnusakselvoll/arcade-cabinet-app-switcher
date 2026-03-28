@@ -392,6 +392,65 @@ public class ConfigurationValidatorTests
         Assert.AreEqual(0, errors.Count);
     }
 
+    // ── windowStyle ──────────────────────────────────────────────────────────
+
+    [TestMethod]
+    public void Validate_WindowStyleNormal_ReturnsNoErrors() =>
+        Assert.AreEqual(0, ConfigurationValidator.Validate(MakeConfig(profiles:
+            [MakeProfileWithCommandConfigs("app", [new CommandConfig { Command = "app.exe", WindowStyle = "normal" }])])).Count);
+
+    [TestMethod]
+    public void Validate_WindowStyleHidden_ReturnsNoErrors() =>
+        Assert.AreEqual(0, ConfigurationValidator.Validate(MakeConfig(profiles:
+            [MakeProfileWithCommandConfigs("app", [new CommandConfig { Command = "app.exe", WindowStyle = "hidden" }])])).Count);
+
+    [TestMethod]
+    public void Validate_WindowStyleMinimized_ReturnsNoErrors() =>
+        Assert.AreEqual(0, ConfigurationValidator.Validate(MakeConfig(profiles:
+            [MakeProfileWithCommandConfigs("app", [new CommandConfig { Command = "app.exe", WindowStyle = "minimized" }])])).Count);
+
+    [TestMethod]
+    public void Validate_WindowStyleMaximized_ReturnsNoErrors() =>
+        Assert.AreEqual(0, ConfigurationValidator.Validate(MakeConfig(profiles:
+            [MakeProfileWithCommandConfigs("app", [new CommandConfig { Command = "app.exe", WindowStyle = "maximized" }])])).Count);
+
+    [TestMethod]
+    public void Validate_WindowStyleCaseInsensitive_ReturnsNoErrors() =>
+        Assert.AreEqual(0, ConfigurationValidator.Validate(MakeConfig(profiles:
+            [MakeProfileWithCommandConfigs("app", [new CommandConfig { Command = "app.exe", WindowStyle = "HIDDEN" }])])).Count);
+
+    [TestMethod]
+    public void Validate_WindowStyleInvalid_ReturnsError()
+    {
+        var config = MakeConfig(profiles:
+            [MakeProfileWithCommandConfigs("app", [new CommandConfig { Command = "app.exe", WindowStyle = "invisible" }])]);
+
+        var errors = ConfigurationValidator.Validate(config);
+        Assert.IsTrue(errors.Count > 0);
+        Assert.IsTrue(errors.Any(e => e.Contains("windowStyle")));
+    }
+
+    [TestMethod]
+    public void Validate_WindowStyleEmpty_ReturnsError()
+    {
+        var config = MakeConfig(profiles:
+            [MakeProfileWithCommandConfigs("app", [new CommandConfig { Command = "app.exe", WindowStyle = "" }])]);
+
+        var errors = ConfigurationValidator.Validate(config);
+        Assert.IsTrue(errors.Count > 0);
+        Assert.IsTrue(errors.Any(e => e.Contains("windowStyle")));
+    }
+
+    [TestMethod]
+    public void Validate_NullWindowStyle_ReturnsNoErrors()
+    {
+        var config = MakeConfig(profiles:
+            [MakeProfileWithCommandConfigs("app", [new CommandConfig { Command = "app.exe", WindowStyle = null }])]);
+
+        var errors = ConfigurationValidator.Validate(config);
+        Assert.AreEqual(0, errors.Count);
+    }
+
     // ── multiple errors ──────────────────────────────────────────────────────
 
     [TestMethod]

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using ArcadeCabinetSwitcher.Configuration;
 using ArcadeCabinetSwitcher.ProcessManagement;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -230,6 +231,37 @@ public class ProcessManagerTests
         Assert.AreEqual(1, launcher.Launched.Count);
     }
 
+    // ── windowStyle ───────────────────────────────────────────────────────────
+
+    [TestMethod]
+    public async Task LaunchProfileAsync_CommandWithWindowStyle_PassesWindowStyleToLauncher()
+    {
+        var launcher = new StubProcessLauncher();
+        var pm = MakeManager(launcher);
+        var profile = new ProfileConfig
+        {
+            Name = "p1",
+            Commands = [new CommandConfig { Command = "app.exe", WindowStyle = "hidden" }],
+            SwitchCombo = new SwitchComboConfig { Buttons = ["B1"], HoldDurationSeconds = 3 }
+        };
+
+        await pm.LaunchProfileAsync(profile, CancellationToken.None);
+
+        Assert.AreEqual(ProcessWindowStyle.Hidden, launcher.Launched[0].WindowStyle);
+    }
+
+    [TestMethod]
+    public async Task LaunchProfileAsync_CommandWithoutWindowStyle_PassesNullWindowStyleToLauncher()
+    {
+        var launcher = new StubProcessLauncher();
+        var pm = MakeManager(launcher);
+        var profile = MakeProfile("p1", "app.exe");
+
+        await pm.LaunchProfileAsync(profile, CancellationToken.None);
+
+        Assert.IsNull(launcher.Launched[0].WindowStyle);
+    }
+
     // ── stubs ─────────────────────────────────────────────────────────────────
 
     private sealed class StubProcessLauncher : IProcessLauncher
@@ -245,24 +277,25 @@ public class ProcessManagerTests
         /// <summary>When true, CloseMainWindow immediately marks the process as exited.</summary>
         public bool AutoExitOnClose { get; set; }
 
-        public IProcessHandle Start(string fileName, string arguments, string? workingDirectory)
+        public IProcessHandle Start(string fileName, string arguments, string? workingDirectory, ProcessWindowStyle? windowStyle = null)
         {
             if (fileName == FailFileName)
                 throw new InvalidOperationException($"Simulated launch failure for '{fileName}'.");
 
-            var handle = new StubProcessHandle(_nextId++, fileName, workingDirectory, AutoExitOnClose);
+            var handle = new StubProcessHandle(_nextId++, fileName, workingDirectory, windowStyle, AutoExitOnClose);
             _launched.Add(handle);
             return handle;
         }
     }
 
-    private sealed class StubProcessHandle(int id, string fileName, string? workingDirectory, bool autoExitOnClose) : IProcessHandle
+    private sealed class StubProcessHandle(int id, string fileName, string? workingDirectory, ProcessWindowStyle? windowStyle, bool autoExitOnClose) : IProcessHandle
     {
         private readonly TaskCompletionSource _exitTcs = new();
 
         public int Id { get; } = id;
         public string FileName { get; } = fileName;
         public string? WorkingDirectory { get; } = workingDirectory;
+        public ProcessWindowStyle? WindowStyle { get; } = windowStyle;
         public bool HasExited { get; private set; }
         public bool CloseMainWindowCalled { get; private set; }
         public bool KillCalled { get; private set; }

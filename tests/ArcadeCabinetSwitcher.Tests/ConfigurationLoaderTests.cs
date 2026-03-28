@@ -357,6 +357,48 @@ public class ConfigurationLoaderTests
         Assert.IsNull(config.Profiles[0].Commands![0].DelaySeconds);
     }
 
+    // ── windowStyle ──────────────────────────────────────────────────────────
+
+    [TestMethod]
+    public void Load_CommandObjectWithWindowStyle_DeserializesWindowStyle()
+    {
+        var path = WriteTempJson("""
+            {
+              "defaultProfile": "app",
+              "profiles": [
+                {
+                  "name": "app",
+                  "commands": [{ "command": "server.exe", "windowStyle": "hidden" }],
+                  "switchCombo": { "buttons": ["B1"], "holdDurationSeconds": 5 }
+                }
+              ]
+            }
+            """);
+
+        var config = MakeLoader(path).Load();
+        Assert.AreEqual("hidden", config.Profiles[0].Commands![0].WindowStyle);
+    }
+
+    [TestMethod]
+    public void Load_CommandObjectWithoutWindowStyle_DeserializesNullWindowStyle()
+    {
+        var path = WriteTempJson("""
+            {
+              "defaultProfile": "app",
+              "profiles": [
+                {
+                  "name": "app",
+                  "commands": [{ "command": "server.exe" }],
+                  "switchCombo": { "buttons": ["B1"], "holdDurationSeconds": 5 }
+                }
+              ]
+            }
+            """);
+
+        var config = MakeLoader(path).Load();
+        Assert.IsNull(config.Profiles[0].Commands![0].WindowStyle);
+    }
+
     // ── tolerance features ───────────────────────────────────────────────────
 
     [TestMethod]
