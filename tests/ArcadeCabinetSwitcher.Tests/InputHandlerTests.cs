@@ -320,6 +320,53 @@ public class InputHandlerTests
         await handler.StopAsync(CancellationToken.None);
     }
 
+    [TestMethod]
+    public async Task ProfileWithNullSwitchCombo_IsExcludedFromComboDetection()
+    {
+        // A profile with no switchCombo should be skipped during combo detection —
+        // no NullReferenceException, and the other profile's combo still fires normally.
+        var fakeTime = new FakeTimeProvider();
+        var stub = new StubJoystickReader(initialized: true);
+        stub.SetState(["Button1"]);
+
+        var handler = new InputHandler(
+            NullLogger<InputHandler>.Instance, stub, fakeTime, TimeSpan.FromMilliseconds(1), false);
+
+        var config = new AppSwitcherConfig
+        {
+            DefaultProfile = null,
+            Profiles =
+            [
+                new ProfileConfig
+                {
+                    Name = "main",
+                    Commands = [new CommandConfig { Command = "app.exe" }],
+                    SwitchCombo = new SwitchComboConfig { Buttons = ["Button1"], HoldDurationSeconds = 3 }
+                },
+                new ProfileConfig
+                {
+                    Name = "tray-only",
+                    Commands = [new CommandConfig { Command = "other.exe" }],
+                    SwitchCombo = null
+                }
+            ]
+        };
+
+        var eventFired = new TaskCompletionSource<string>();
+        handler.ProfileSwitchRequested += (_, name) => eventFired.TrySetResult(name);
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        await handler.StartAsync(config, cts.Token);
+
+        await Task.Delay(20);
+        fakeTime.Advance(TimeSpan.FromSeconds(3));
+
+        var result = await eventFired.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        Assert.AreEqual("main", result);
+
+        await handler.StopAsync(CancellationToken.None);
+    }
+
     /// <summary>
     /// Stub joystick reader that returns a controllable set of pressed buttons.
     /// </summary>

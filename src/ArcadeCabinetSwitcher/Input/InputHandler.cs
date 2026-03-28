@@ -34,9 +34,10 @@ internal sealed class InputHandler : IInputHandler
     public Task StartAsync(AppSwitcherConfig config, CancellationToken cancellationToken)
     {
         var combos = config.Profiles
+            .Where(p => p.SwitchCombo is not null)
             .Select(p => new ComboDefinition(
                 p.Name,
-                new HashSet<string>(p.SwitchCombo.Buttons, StringComparer.OrdinalIgnoreCase),
+                new HashSet<string>(p.SwitchCombo!.Buttons, StringComparer.OrdinalIgnoreCase),
                 TimeSpan.FromSeconds(p.SwitchCombo.HoldDurationSeconds)))
             .ToList();
 

@@ -43,10 +43,6 @@ internal static class ConfigurationValidator
             {
                 errors.Add($"Profile '{profile.Name}': Cannot specify both Commands and Action.");
             }
-            else if (!hasCommands && !hasAction)
-            {
-                errors.Add($"Profile '{profile.Name}': Must specify either Commands or Action.");
-            }
             else if (hasCommands)
             {
                 foreach (var cmd in profile.Commands!)
@@ -71,26 +67,34 @@ internal static class ConfigurationValidator
                 }
             }
 
-            if (profile.SwitchCombo.Buttons.Count == 0)
+            if (profile.SwitchCombo is not null)
             {
-                errors.Add($"Profile '{profile.Name}': SwitchCombo.Buttons must not be empty.");
-            }
-            else
-            {
-                foreach (var button in profile.SwitchCombo.Buttons)
+                if (profile.SwitchCombo.Buttons.Count == 0)
                 {
-                    if (string.IsNullOrWhiteSpace(button))
+                    errors.Add($"Profile '{profile.Name}': SwitchCombo.Buttons must not be empty.");
+                }
+                else
+                {
+                    foreach (var button in profile.SwitchCombo.Buttons)
                     {
-                        errors.Add($"Profile '{profile.Name}': SwitchCombo.Buttons must not contain blank entries.");
-                        break;
+                        if (string.IsNullOrWhiteSpace(button))
+                        {
+                            errors.Add($"Profile '{profile.Name}': SwitchCombo.Buttons must not contain blank entries.");
+                            break;
+                        }
                     }
                 }
-            }
 
-            if (profile.SwitchCombo.HoldDurationSeconds <= 0)
-            {
-                errors.Add($"Profile '{profile.Name}': SwitchCombo.HoldDurationSeconds must be greater than 0.");
+                if (profile.SwitchCombo.HoldDurationSeconds <= 0)
+                {
+                    errors.Add($"Profile '{profile.Name}': SwitchCombo.HoldDurationSeconds must be greater than 0.");
+                }
             }
+        }
+
+        if (config.Profiles.Count > 0 && config.Profiles.All(p => p.SwitchCombo is null))
+        {
+            errors.Add("At least one profile must have a switchCombo so that profiles are accessible via joystick input.");
         }
 
         return errors;

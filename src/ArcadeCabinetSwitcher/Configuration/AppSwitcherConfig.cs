@@ -29,7 +29,7 @@ public sealed class ProfileConfig
     /// </summary>
     public ProfileAction? Action { get; init; }
 
-    public required SwitchComboConfig SwitchCombo { get; init; }
+    public SwitchComboConfig? SwitchCombo { get; init; }
 }
 
 /// <summary>
