@@ -193,7 +193,7 @@ public class ConfigurationValidatorTests
     }
 
     [TestMethod]
-    public void Validate_NeitherCommandsNorAction_ReturnsError()
+    public void Validate_NeitherCommandsNorAction_ReturnsNoErrors()
     {
         var profile = new ProfileConfig
         {
@@ -205,11 +205,11 @@ public class ConfigurationValidatorTests
         var config = MakeConfig(profiles: [profile]);
 
         var errors = ConfigurationValidator.Validate(config);
-        Assert.IsTrue(errors.Any(e => e.Contains("Must specify either")));
+        Assert.AreEqual(0, errors.Count);
     }
 
     [TestMethod]
-    public void Validate_EmptyCommandsList_ReturnsError()
+    public void Validate_EmptyCommandsList_ReturnsNoErrors()
     {
         var profile = new ProfileConfig
         {
@@ -221,7 +221,7 @@ public class ConfigurationValidatorTests
         var config = MakeConfig(profiles: [profile]);
 
         var errors = ConfigurationValidator.Validate(config);
-        Assert.IsTrue(errors.Any(e => e.Contains("Must specify either")));
+        Assert.AreEqual(0, errors.Count);
     }
 
     [TestMethod]
@@ -342,6 +342,54 @@ public class ConfigurationValidatorTests
 
         var errors = ConfigurationValidator.Validate(config);
         Assert.IsTrue(errors.Any(e => e.Contains("delaySeconds")));
+    }
+
+    // ── optional switchCombo ─────────────────────────────────────────────────
+
+    [TestMethod]
+    public void Validate_ProfileWithNullSwitchCombo_ReturnsNoErrors()
+    {
+        var profileWithCombo = MakeProfile("main");
+        var profileWithoutCombo = new ProfileConfig
+        {
+            Name = "empty",
+            Commands = null,
+            Action = null,
+            SwitchCombo = null
+        };
+        var config = MakeConfig(defaultProfile: null, profiles: [profileWithCombo, profileWithoutCombo]);
+
+        var errors = ConfigurationValidator.Validate(config);
+        Assert.AreEqual(0, errors.Count);
+    }
+
+    [TestMethod]
+    public void Validate_AllProfilesWithNullSwitchCombo_ReturnsError()
+    {
+        var config = new AppSwitcherConfig
+        {
+            DefaultProfile = null,
+            Profiles =
+            [
+                new ProfileConfig { Name = "app", Commands = [new CommandConfig { Command = "app.exe" }], SwitchCombo = null }
+            ]
+        };
+
+        var errors = ConfigurationValidator.Validate(config);
+        Assert.IsTrue(errors.Any(e => e.Contains("At least one profile")));
+    }
+
+    [TestMethod]
+    public void Validate_EmptyProfileNoSwitchCombo_ReturnsNoErrors()
+    {
+        // A profile with no commands, no action, and no switchCombo is valid
+        // as long as at least one other profile has a switchCombo.
+        var mainProfile = MakeProfile("main");
+        var emptyProfile = new ProfileConfig { Name = "idle", Commands = null, Action = null, SwitchCombo = null };
+        var config = MakeConfig(defaultProfile: null, profiles: [mainProfile, emptyProfile]);
+
+        var errors = ConfigurationValidator.Validate(config);
+        Assert.AreEqual(0, errors.Count);
     }
 
     // ── multiple errors ──────────────────────────────────────────────────────

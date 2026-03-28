@@ -61,6 +61,20 @@ The Arcade Cabinet App Switcher is a startup application managed by Task Schedul
 2. Task Scheduler restart policy restarts the application automatically (up to 3 times, 5-second delay)
 3. After each restart, the application resumes normal operation including launching the default profile
 
+### UC-7: Empty Profile / Stop Active Profile
+
+1. The user holds the joystick combo (or selects via system tray) for a profile with no commands and no action
+2. The application terminates all processes belonging to the currently active profile
+3. No new processes are launched
+4. The system returns to an idle state with no active profile running
+
+### UC-8: Tray-Only Profile
+
+1. A profile is configured without a `switchCombo`
+2. The profile does not appear as a joystick combo option — it cannot be triggered by holding buttons
+3. The profile is accessible from the system tray/overlay UI
+4. Selecting it from the UI switches to that profile normally (terminates the active profile, launches the new one)
+
 ## Functional Requirements
 
 ### FR-1: Profiles and Configuration
@@ -71,15 +85,15 @@ The Arcade Cabinet App Switcher is a startup application managed by Task Schedul
 - **FR-1.2** The configuration may optionally specify a default profile that is launched at startup; if omitted, the application starts without launching any profile and waits for input
 - **FR-1.3** Each profile has:
   - A unique name (string identifier)
-  - One or more commands/programs to execute; each command may optionally specify a `workingDirectory` and a `delaySeconds` (non-negative integer) to delay the launch of that command relative to the preceding one
-  - A joystick switch combo (list of buttons) and hold duration in seconds
+  - Optionally, one or more commands/programs to execute; each command may optionally specify a `workingDirectory` and a `delaySeconds` (non-negative integer) to delay the launch of that command relative to the preceding one. A profile with no commands and no action is valid — switching to it terminates the current profile without launching anything (useful as an "idle" or "stop" profile)
+  - Optionally, a joystick switch combo (list of buttons) and hold duration in seconds. A profile without a switchCombo is accessible only from the system tray/overlay UI, not via joystick input. At least one profile must have a switchCombo so that profiles are reachable via joystick input
 - **FR-1.4** Special profiles (reboot, shutdown) are supported via reserved command keywords or system actions rather than executable paths
 - **FR-1.5** The configuration file must be validated on load; the service logs an error and fails to start if the configuration is invalid
 
 ### FR-2: Input Handling
 
 - **FR-2.1** The service continuously monitors joystick/gamepad input while running
-- **FR-2.2** Each profile defines its own distinct button combination for switching to it
+- **FR-2.2** Each profile that has a switchCombo defines its own distinct button combination for switching to it; profiles without a switchCombo are excluded from joystick combo detection
 - **FR-2.3** A switch is triggered only after the combo has been held for the configured hold duration (e.g., 10 seconds)
 - **FR-2.4** Releasing the combo before the hold duration elapses cancels the switch
 - **FR-2.5** Input monitoring runs independently of any launched profile processes

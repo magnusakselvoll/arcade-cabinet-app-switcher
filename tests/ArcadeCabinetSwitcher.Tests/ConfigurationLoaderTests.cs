@@ -195,8 +195,8 @@ public class ConfigurationLoaderTests
             """);
 
         var config = MakeLoader(path).Load();
-        Assert.AreEqual(7, config.Profiles[0].SwitchCombo.HoldDurationSeconds);
-        Assert.AreEqual("Button1", config.Profiles[0].SwitchCombo.Buttons[0]);
+        Assert.AreEqual(7, config.Profiles[0].SwitchCombo!.HoldDurationSeconds);
+        Assert.AreEqual("Button1", config.Profiles[0].SwitchCombo!.Buttons[0]);
     }
 
     // ── enum deserialization ─────────────────────────────────────────────────
