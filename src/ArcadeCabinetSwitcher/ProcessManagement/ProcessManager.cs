@@ -7,17 +7,20 @@ internal sealed class ProcessManager : IProcessManager
 {
     private readonly ILogger<ProcessManager> _logger;
     private readonly IProcessLauncher _processLauncher;
+    private readonly IJobObjectFactory? _jobObjectFactory;
     private readonly TimeSpan _gracefulExitTimeout;
     private readonly Lock _lock = new();
     private readonly List<IProcessHandle> _activeProcesses = [];
+    private IJobObject? _activeJobObject;
 
-    public ProcessManager(ILogger<ProcessManager> logger, IProcessLauncher processLauncher)
-        : this(logger, processLauncher, TimeSpan.FromSeconds(5)) { }
+    public ProcessManager(ILogger<ProcessManager> logger, IProcessLauncher processLauncher, IJobObjectFactory? jobObjectFactory)
+        : this(logger, processLauncher, jobObjectFactory, TimeSpan.FromSeconds(5)) { }
 
-    internal ProcessManager(ILogger<ProcessManager> logger, IProcessLauncher processLauncher, TimeSpan gracefulExitTimeout)
+    internal ProcessManager(ILogger<ProcessManager> logger, IProcessLauncher processLauncher, IJobObjectFactory? jobObjectFactory, TimeSpan gracefulExitTimeout)
     {
         _logger = logger;
         _processLauncher = processLauncher;
+        _jobObjectFactory = jobObjectFactory;
         _gracefulExitTimeout = gracefulExitTimeout;
     }
 
@@ -25,6 +28,8 @@ internal sealed class ProcessManager : IProcessManager
     {
         if (profile.Commands is null || profile.Commands.Count == 0)
             return;
+
+        _activeJobObject = CreateJobObject();
 
         foreach (var commandConfig in profile.Commands)
         {
@@ -46,6 +51,8 @@ internal sealed class ProcessManager : IProcessManager
                 _logger.LogInformation(LogEvents.ProcessLaunched,
                     "Launched process {ProcessId} for command {Command} with working directory {WorkingDirectory}",
                     handle.Id, commandConfig.Command, workingDirectory);
+
+                TryAssignToJobObject(handle);
             }
             catch (Exception ex)
             {
@@ -62,13 +69,16 @@ internal sealed class ProcessManager : IProcessManager
     public async Task TerminateActiveProfileAsync(CancellationToken cancellationToken)
     {
         List<IProcessHandle> snapshot;
+        IJobObject? jobObject;
         lock (_lock)
         {
             snapshot = [.._activeProcesses];
             _activeProcesses.Clear();
+            jobObject = _activeJobObject;
+            _activeJobObject = null;
         }
 
-        if (snapshot.Count == 0)
+        if (snapshot.Count == 0 && jobObject is null)
             return;
 
         _logger.LogInformation(LogEvents.ProfileTerminationStarted,
@@ -109,6 +119,16 @@ internal sealed class ProcessManager : IProcessManager
         }
         finally
         {
+            // Kill all processes in the job object — this terminates root processes and any
+            // orphaned child processes whose parent has already exited (the FR-3.2 fix)
+            if (jobObject is not null)
+            {
+                jobObject.Terminate();
+                _logger.LogInformation(LogEvents.JobObjectTerminated,
+                    "Terminated job object (all descendant processes)");
+                jobObject.Dispose();
+            }
+
             foreach (var handle in toKill)
             {
                 try
@@ -134,6 +154,46 @@ internal sealed class ProcessManager : IProcessManager
         }
 
         _logger.LogInformation(LogEvents.ProfileTerminationCompleted, "Profile termination completed");
+    }
+
+    private IJobObject? CreateJobObject()
+    {
+        if (_jobObjectFactory is null)
+            return null;
+
+        try
+        {
+            var job = _jobObjectFactory.Create();
+            if (job is not null)
+                _logger.LogInformation(LogEvents.JobObjectCreated, "Created job object for profile");
+            return job;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(LogEvents.JobObjectCreateFailed, ex,
+                "Failed to create job object — child process tracking will be limited");
+            return null;
+        }
+    }
+
+    private void TryAssignToJobObject(IProcessHandle handle)
+    {
+        if (_activeJobObject is null)
+            return;
+
+        try
+        {
+            if (!_activeJobObject.TryAssignProcess(handle.NativeHandle))
+            {
+                _logger.LogWarning(LogEvents.ProcessAssignToJobFailed,
+                    "Failed to assign process {ProcessId} to job object", handle.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(LogEvents.ProcessAssignToJobFailed, ex,
+                "Failed to assign process {ProcessId} to job object", handle.Id);
+        }
     }
 
     private static ProcessWindowStyle? ParseWindowStyle(string? value) =>

@@ -20,7 +20,10 @@ public class ProcessManagerTests
         };
 
     private static ProcessManager MakeManager(StubProcessLauncher launcher, TimeSpan? timeout = null) =>
-        new(NullLogger<ProcessManager>.Instance, launcher, timeout ?? ShortTimeout);
+        new(NullLogger<ProcessManager>.Instance, launcher, null, timeout ?? ShortTimeout);
+
+    private static ProcessManager MakeManager(StubProcessLauncher launcher, StubJobObjectFactory jobFactory, TimeSpan? timeout = null) =>
+        new(NullLogger<ProcessManager>.Instance, launcher, jobFactory, timeout ?? ShortTimeout);
 
     // ── launch ───────────────────────────────────────────────────────────────
 
@@ -264,6 +267,77 @@ public class ProcessManagerTests
 
     // ── stubs ─────────────────────────────────────────────────────────────────
 
+    // ── job object tests ─────────────────────────────────────────────────────
+
+    [TestMethod]
+    public async Task LaunchProfileAsync_AssignsLaunchedProcessesToJobObject()
+    {
+        var launcher = new StubProcessLauncher();
+        var jobFactory = new StubJobObjectFactory();
+        var pm = MakeManager(launcher, jobFactory);
+
+        await pm.LaunchProfileAsync(MakeProfile("p1", "app1.exe", "app2.exe"), CancellationToken.None);
+
+        Assert.IsNotNull(jobFactory.LastCreated);
+        Assert.AreEqual(2, jobFactory.LastCreated.AssignedCount);
+    }
+
+    [TestMethod]
+    public async Task TerminateActiveProfileAsync_TerminatesJobObject()
+    {
+        var launcher = new StubProcessLauncher { AutoExitOnClose = true };
+        var jobFactory = new StubJobObjectFactory();
+        var pm = MakeManager(launcher, jobFactory);
+        await pm.LaunchProfileAsync(MakeProfile("p1", "app.exe"), CancellationToken.None);
+
+        await pm.TerminateActiveProfileAsync(CancellationToken.None);
+
+        Assert.IsTrue(jobFactory.LastCreated!.Terminated);
+    }
+
+    [TestMethod]
+    public async Task TerminateActiveProfileAsync_DisposesJobObject()
+    {
+        var launcher = new StubProcessLauncher { AutoExitOnClose = true };
+        var jobFactory = new StubJobObjectFactory();
+        var pm = MakeManager(launcher, jobFactory);
+        await pm.LaunchProfileAsync(MakeProfile("p1", "app.exe"), CancellationToken.None);
+
+        await pm.TerminateActiveProfileAsync(CancellationToken.None);
+
+        Assert.IsTrue(jobFactory.LastCreated!.Disposed);
+    }
+
+    [TestMethod]
+    public async Task TerminateActiveProfileAsync_WithExitedRootProcess_StillTerminatesJobObject()
+    {
+        // Regression test for issue #75: ARCADIUM.exe spawns children then exits;
+        // orphaned children must still be killed via the job object.
+        var launcher = new StubProcessLauncher();
+        var jobFactory = new StubJobObjectFactory();
+        var pm = MakeManager(launcher, jobFactory);
+        await pm.LaunchProfileAsync(MakeProfile("p1", "launcher.exe"), CancellationToken.None);
+        launcher.Launched[0].SimulateExit(); // root process exits; children are now orphaned
+
+        await pm.TerminateActiveProfileAsync(CancellationToken.None);
+
+        Assert.IsTrue(jobFactory.LastCreated!.Terminated);
+    }
+
+    [TestMethod]
+    public async Task TerminateActiveProfileAsync_NullJobObjectFactory_FallsBackToIndividualKill()
+    {
+        var launcher = new StubProcessLauncher(); // no job factory
+        var pm = MakeManager(launcher, ShortTimeout);
+        await pm.LaunchProfileAsync(MakeProfile("p1", "stubborn.exe"), CancellationToken.None);
+
+        await pm.TerminateActiveProfileAsync(CancellationToken.None);
+
+        Assert.IsTrue(launcher.Launched[0].KillCalled);
+    }
+
+    // ── stubs ─────────────────────────────────────────────────────────────────
+
     private sealed class StubProcessLauncher : IProcessLauncher
     {
         private int _nextId = 1;
@@ -293,6 +367,7 @@ public class ProcessManagerTests
         private readonly TaskCompletionSource _exitTcs = new();
 
         public int Id { get; } = id;
+        public nint NativeHandle => IntPtr.Zero;
         public string FileName { get; } = fileName;
         public string? WorkingDirectory { get; } = workingDirectory;
         public ProcessWindowStyle? WindowStyle { get; } = windowStyle;
@@ -324,6 +399,34 @@ public class ProcessManagerTests
         {
             HasExited = true;
             _exitTcs.TrySetResult();
+        }
+    }
+
+    private sealed class StubJobObject : IJobObject
+    {
+        public int AssignedCount { get; private set; }
+        public bool Terminated { get; private set; }
+        public bool Disposed { get; private set; }
+
+        public bool TryAssignProcess(nint processHandle)
+        {
+            AssignedCount++;
+            return true;
+        }
+
+        public void Terminate(uint exitCode = 1) => Terminated = true;
+
+        public void Dispose() => Disposed = true;
+    }
+
+    private sealed class StubJobObjectFactory : IJobObjectFactory
+    {
+        public StubJobObject? LastCreated { get; private set; }
+
+        public IJobObject? Create()
+        {
+            LastCreated = new StubJobObject();
+            return LastCreated;
         }
     }
 }

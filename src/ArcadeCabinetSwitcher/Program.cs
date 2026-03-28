@@ -18,6 +18,7 @@ var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddSingleton<IOverlayService, AvaloniaOverlayService>();
 builder.Services.AddSingleton<IConfigurationLoader, ConfigurationLoader>();
 builder.Services.AddSingleton<IProcessLauncher, SystemProcessLauncher>();
+builder.Services.AddSingleton<IJobObjectFactory, JobObjectFactory>();
 builder.Services.AddSingleton<IProcessManager, ProcessManager>();
 builder.Services.AddSingleton<ISystemActionHandler, SystemActionHandler>();
 builder.Services.AddSingleton<IJoystickReader, SdlJoystickReader>();
