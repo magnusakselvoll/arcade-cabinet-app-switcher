@@ -41,6 +41,7 @@ public sealed class ProfileConfig
 /// </code>
 /// When <see cref="WorkingDirectory"/> is omitted, the process is started in the directory
 /// containing the executable.
+/// When <see cref="WindowStyle"/> is omitted, the process is started with its default window style.
 /// </summary>
 [JsonConverter(typeof(CommandConfigConverter))]
 public sealed class CommandConfig
@@ -48,6 +49,15 @@ public sealed class CommandConfig
     public required string Command { get; init; }
     public string? WorkingDirectory { get; init; }
     public int? DelaySeconds { get; init; }
+
+    /// <summary>
+    /// Optional window style for the launched process. Accepted values (case-insensitive):
+    /// <c>normal</c>, <c>hidden</c>, <c>minimized</c>, <c>maximized</c>.
+    /// When omitted, the process starts with its default window style.
+    /// Use <c>hidden</c> or <c>minimized</c> for background/server processes to prevent them
+    /// from stealing focus from a subsequently launched foreground application.
+    /// </summary>
+    public string? WindowStyle { get; init; }
 }
 
 /// <summary>

@@ -64,6 +64,12 @@ internal static class ConfigurationValidator
                         errors.Add($"Profile '{profile.Name}': Command delaySeconds must be >= 0.");
                         break;
                     }
+
+                    if (cmd.WindowStyle is not null && !IsValidWindowStyle(cmd.WindowStyle))
+                    {
+                        errors.Add($"Profile '{profile.Name}': Command windowStyle '{cmd.WindowStyle}' is invalid. Valid values: normal, hidden, minimized, maximized.");
+                        break;
+                    }
                 }
             }
 
@@ -99,4 +105,10 @@ internal static class ConfigurationValidator
 
         return errors;
     }
+
+    private static bool IsValidWindowStyle(string value) =>
+        value.Equals("normal", StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("hidden", StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("minimized", StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("maximized", StringComparison.OrdinalIgnoreCase);
 }

@@ -66,6 +66,33 @@ Each profile specifies either the commands to run or a special action (`reboot`/
 }
 ```
 
+Commands can also be specified as objects to control additional options:
+
+| Property | Required | Description |
+|---|---|---|
+| `command` | Yes | The executable path and optional arguments |
+| `workingDirectory` | No | Working directory for the process (defaults to the executable's directory) |
+| `delaySeconds` | No | Seconds to wait before launching this command (useful for sequencing) |
+| `windowStyle` | No | Initial window state: `normal`, `hidden`, `minimized`, or `maximized`. Use `hidden` or `minimized` for background/server processes to prevent them from stealing focus from a subsequently launched UI application. |
+
+```json
+{
+  "name": "photobooth",
+  "commands": [
+    {
+      "command": "C:\\PhotoBooth\\PhotoBooth.Server.exe",
+      "workingDirectory": "C:\\PhotoBooth",
+      "windowStyle": "hidden"
+    },
+    {
+      "command": "\"C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe\" --kiosk http://localhost:5000 --edge-kiosk-type=fullscreen",
+      "delaySeconds": 3
+    }
+  ],
+  "switchCombo": { "buttons": ["Button1", "Button2"], "holdDurationSeconds": 10 }
+}
+```
+
 See [SPEC.md](SPEC.md) for the full configuration format and validation rules.
 
 ## Installation (Windows)
