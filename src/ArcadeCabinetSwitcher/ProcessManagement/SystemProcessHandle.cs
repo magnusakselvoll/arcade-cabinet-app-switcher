@@ -5,6 +5,7 @@ namespace ArcadeCabinetSwitcher.ProcessManagement;
 internal sealed class SystemProcessHandle(Process process) : IProcessHandle
 {
     public int Id => process.Id;
+    public nint NativeHandle => process.Handle;
     public bool HasExited => process.HasExited;
 
     public bool CloseMainWindow() => process.CloseMainWindow();

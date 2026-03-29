@@ -42,6 +42,10 @@ public static class LogEvents
     public static readonly EventId ProfileLaunched = new(4004, nameof(ProfileLaunched));
     public static readonly EventId ProfileTerminationStarted = new(4005, nameof(ProfileTerminationStarted));
     public static readonly EventId ProfileTerminationCompleted = new(4006, nameof(ProfileTerminationCompleted));
+    public static readonly EventId ProcessAssignToJobFailed = new(4007, nameof(ProcessAssignToJobFailed));
+    public static readonly EventId JobObjectTerminated = new(4008, nameof(JobObjectTerminated));
+    public static readonly EventId JobObjectCreated = new(4009, nameof(JobObjectCreated));
+    public static readonly EventId JobObjectCreateFailed = new(4010, nameof(JobObjectCreateFailed));
 
     // Input detection
     public static readonly EventId InputComboDetected = new(5000, nameof(InputComboDetected));
