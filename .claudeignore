@@ -1,0 +1,15 @@
+# Build output (~324 MB)
+**/bin/
+**/obj/
+**/TestResults/
+publish/
+
+# Installer output
+*.msi
+*.cab
+
+# IDE and OS
+.vs/
+.idea/
+.DS_Store
+Thumbs.db
